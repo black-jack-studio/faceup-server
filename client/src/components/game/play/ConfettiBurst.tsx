@@ -14,22 +14,24 @@ interface Particle {
 }
 
 // A short, cheap burst — no canvas/library, just a handful of framer-motion divs flung out
-// from the center and fading as they fall. Deliberately brief (see the transition below) to
-// match the "vite fait" result sequence around it, not a lingering full-screen celebration.
+// from the center and fading as they fall. Bigger/further-flung and a touch longer-lived than
+// it used to be (Anatole, 2026-09-12: "un peu plus en mode wow"), but still brief — see the
+// transition below — to match the "vite fait" result sequence around it, not a lingering
+// full-screen celebration.
 export default function ConfettiBurst({ active, count = 14 }: { active: boolean; count?: number }) {
   // Regenerated only when the burst actually (re)starts — a stable particle layout for the
-  // whole ~700ms life of one burst, not reshuffled every render while it's playing.
+  // whole ~900ms life of one burst, not reshuffled every render while it's playing.
   const particles = useMemo<Particle[]>(() => {
     if (!active) return [];
     return Array.from({ length: count }, (_, i) => {
       const angle = (i / count) * Math.PI * 2 + (Math.random() * 0.5 - 0.25);
       return {
         angle,
-        distance: 46 + Math.random() * 60,
+        distance: 60 + Math.random() * 90,
         color: COLORS[i % COLORS.length],
-        delay: Math.random() * 0.06,
+        delay: Math.random() * 0.08,
         rotate: Math.random() * 360,
-        size: 5 + Math.random() * 4,
+        size: 6 + Math.random() * 6,
         square: i % 2 === 0,
       };
     });
@@ -57,11 +59,14 @@ export default function ConfettiBurst({ active, count = 14 }: { active: boolean;
             animate={{
               x,
               y: y + 34,
-              opacity: 0,
+              // Full opacity for the first 60% of the flight instead of fading the instant it
+              // launches — reads as a piece actually flying out before it fades, not a puff
+              // that's already dissolving as it leaves (Anatole, 2026-09-12: "plus smooth").
+              opacity: [1, 1, 0],
               rotate: p.rotate,
               scale: 1,
             }}
-            transition={{ duration: 0.7, delay: p.delay, ease: "easeOut" }}
+            transition={{ duration: 0.9, delay: p.delay, ease: "easeOut", opacity: { duration: 0.9, times: [0, 0.6, 1] } }}
           />
         );
       })}

@@ -41,6 +41,16 @@ const ROOM = { name: "Garage", minBet: 1, maxBet: 500 };
 // How long the result banner (label+amount+XP) stays up before handing off, in the same slot,
 // to the win streak bar — see the effect that drives showStreakInResultSlot below.
 const RESULT_TO_STREAK_DELAY_MS = 1500;
+// Gap between the result banner starting its own exit fade and the streak bar actually
+// mounting — matches (rounded up from) RoundResultBanner's own 0.3s exit transition. Without
+// this, both were flex siblings in the same centered slot for that whole overlap: the box
+// briefly held both banner-exiting and bar-entering stacked, and shrank back down the instant
+// the banner fully unmounted, reading as the bar arriving and then hopping into place a beat
+// later (Anatole, 2026-09-12: "elle arrive, mais d'un coup, genre brut, et puis elle remonte un
+// peu"). Waiting for the banner to actually be gone before mounting the bar means there's never
+// a moment both share the slot, so the bar just fades in already sitting exactly where it'll
+// stay.
+const RESULT_EXIT_BUFFER_MS = 350;
 // Total time a result stays on screen before auto-advancing to the next hand (no tap needed
 // any more, in auto-bet or not) — long enough, past the delay above, to actually see the
 // streak bar's own reveal, and to give a real win time to tap Watch-to-2X before it's gone. See
@@ -98,8 +108,13 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // it back to null itself once its own timer's up.
   const [streakCelebrationBonus, setStreakCelebrationBonus] = useState<number | null>(null);
   // EXPERIMENTAL, see RESULT_TO_STREAK_DELAY_MS above — flips true partway through a result's
-  // display, handing the resultRef slot over to WinStreakBar in place of RoundResultBanner (see
-  // the effect near handleDismissResult and the JSX in that slot below).
+  // display, hiding RoundResultBanner (see hideResultBanner below, not this) so it starts its
+  // own exit fade.
+  const [hideResultBanner, setHideResultBanner] = useState(false);
+  // Flips true RESULT_EXIT_BUFFER_MS after hideResultBanner — i.e. only once the banner has
+  // actually finished exiting and unmounted — handing the resultRef slot over to WinStreakBar.
+  // See RESULT_EXIT_BUFFER_MS's own comment for why this needs its own later timer rather than
+  // sharing hideResultBanner's.
   const [showStreakInResultSlot, setShowStreakInResultSlot] = useState(false);
   // Auto-bet — once on, handleDismissResult (see its own effect below) re-fires handlePlaceBet
   // with the same currentBet the instant a round ends, on repeat until paused. No stop-loss/
@@ -558,16 +573,25 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // (Anatole, 2026-09-12): manual mode goes back to the streak bar's old home in the betting
   // slot instead (see isBetting's own render below), so this handoff — and the auto-dismiss
   // effect further down, once canOfferDouble exists — only matter, and only run, while auto-bet
-  // is actually on. Resets the instant a new result starts showing, then flips on partway
-  // through it — a one-shot handoff, not tied to isDoubling, since the top slot's own content
-  // swap has nothing to do with the button below.
+  // is actually on. Resets the instant a new result starts showing, then runs the two-step
+  // handoff (hide the banner, then — only once it's actually gone, see RESULT_EXIT_BUFFER_MS —
+  // show the bar) partway through it. Neither timer is tied to isDoubling: the top slot's own
+  // content swap has nothing to do with the button below.
   useEffect(() => {
     if (!showResult || !autoBetEnabled) {
+      setHideResultBanner(false);
       setShowStreakInResultSlot(false);
       return;
     }
-    const timer = setTimeout(() => setShowStreakInResultSlot(true), RESULT_TO_STREAK_DELAY_MS);
-    return () => clearTimeout(timer);
+    const hideTimer = setTimeout(() => setHideResultBanner(true), RESULT_TO_STREAK_DELAY_MS);
+    const showBarTimer = setTimeout(
+      () => setShowStreakInResultSlot(true),
+      RESULT_TO_STREAK_DELAY_MS + RESULT_EXIT_BUFFER_MS
+    );
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(showBarTimer);
+    };
   }, [showResult, autoBetEnabled]);
 
   // Folds in isAutoRebetting so the wheel/header betting text never mounts for an auto-fired
@@ -832,15 +856,17 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             isBetting render below).
 
             EXPERIMENTAL, auto-bet only (Anatole, 2026-09-12): partway through a result's
-            display, showStreakInResultSlot swaps this slot over to the win streak bar in its
-            place instead — see that state's own comment above — rather than the two ever
-            showing at once. */}
+            display, this slot swaps over to the win streak bar in RoundResultBanner's place —
+            see hideResultBanner/showStreakInResultSlot's own comments above for why those are
+            two separate, staggered timers rather than one, and RESULT_EXIT_BUFFER_MS for why:
+            the two never actually overlap in the DOM, so this box never has to shrink back down
+            right after the bar arrives. */}
         <div
           ref={resultRef}
           className="pt-20 min-h-[140px] flex flex-col items-center justify-center"
         >
           <RoundResultBanner
-            show={showResult && !showStreakInResultSlot}
+            show={showResult && !hideResultBanner}
             resultType={resultType}
             netResultAmount={netResultAmount}
             doubledTo={doubledTo}
@@ -853,8 +879,8 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
               <motion.div
                 key="streak-handoff"
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1, transition: { duration: 0.3, ease: "easeOut" } }}
-                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                animate={{ opacity: 1, transition: { duration: 0.4, ease: "easeOut" } }}
+                exit={{ opacity: 0, transition: { duration: 0.3, ease: "easeIn" } }}
               >
                 <WinStreakBar
                   streak={displayedStreak}

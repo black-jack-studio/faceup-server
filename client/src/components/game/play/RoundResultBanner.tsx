@@ -204,28 +204,34 @@ export default function RoundResultBanner({
           // the dealer's own total, in the one stretch of that column that's otherwise always
           // empty (see classic.tsx's own comment there). Used to be centered over the whole
           // screen instead, which landed it squarely on top of the player's cards — illegible,
-          // and worse the bigger those cards got. relative (not static) only so ConfettiBurst's
-          // own absolute inset-0 anchors to this box instead of the page. z-30 keeps this whole
-          // block above both the tap hit target right above (z-25) and ResultDimOverlay's own
-          // visual dim in classic.tsx (z-26) — the bottom Watch-to-2X button matches this
-          // same z-30 itself now, for the same reason (see classic.tsx's own comment there).
+          // and worse the bigger those cards got. z-30 keeps this whole block above both the tap
+          // hit target right above (z-25) and ResultDimOverlay's own visual dim in classic.tsx
+          // (z-26) — the bottom Watch-to-2X button matches this same z-30 itself now, for the
+          // same reason (see classic.tsx's own comment there).
           className="relative z-30 w-full flex flex-col items-center pt-2 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.2, ease: "easeIn" } }}
+          exit={{ opacity: 0, transition: { duration: 0.3, ease: "easeIn" } }}
         >
+          <motion.div
+            className="relative w-full flex flex-col items-center pointer-events-auto"
+            initial={{ opacity: 0, scale: 0.85, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 280, damping: 26 } }}
+          >
+          {/* Its own relative box, scoped to just the label/amount + XP rows below — not the
+              challenge/rank row further down, and not this whole component's own pt-2 padding
+              either. ConfettiBurst centers on WHATEVER box it's given (absolute inset-0), so
+              this is what actually pins the burst's origin to where "+1"/"+5 XP" are printed
+              instead of the middle of the combined block including challenge/rank (Anatole,
+              2026-09-12: "les confettis, qu'ils explosent... au niveau de là où il y a marqué
+              1+5"). */}
+          <div className="relative w-full flex flex-col items-center">
           <ConfettiBurst
             active={resultType === "win" || resultType === "blackjack"}
             // Blackjack keeps its own extra flourish on top of the amount-scaled tier, same as
             // before this scaled by amount at all.
             count={resultType === "blackjack" ? intensity.confettiCount + 8 : intensity.confettiCount}
           />
-
-          <motion.div
-            className="relative w-full flex flex-col items-center pointer-events-auto"
-            initial={{ opacity: 0, scale: 0.85, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 420, damping: 24 } }}
-          >
           <div className="flex items-center justify-center gap-2.5">
             <span className="text-xl font-bold text-white" data-testid="text-result-label">
               {t(LABEL_KEY[resultType])}
@@ -259,6 +265,7 @@ export default function RoundResultBanner({
               </span>
             </div>
           )}
+          </div>
 
           <div className="flex flex-col items-center gap-2 pointer-events-auto">
           {(() => {
