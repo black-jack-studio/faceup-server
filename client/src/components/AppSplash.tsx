@@ -7,6 +7,10 @@ import "./AppSplash.css";
 // the animation is never cut short.
 const REVEAL_MS = 1210;
 const EXIT_MS = 480;
+// Hard ceiling so a slow or hung session check (e.g. the backend's free-tier
+// cold start) can never leave this full-screen, click-blocking overlay up
+// indefinitely — it forces an exit even if `ready` never fires.
+const MAX_WAIT_MS = 8000;
 
 interface AppSplashProps {
   // True once auth/session check has resolved and the app is safe to reveal.
@@ -17,6 +21,7 @@ interface AppSplashProps {
 
 export default function AppSplash({ ready, onFinished }: AppSplashProps) {
   const [revealDone, setRevealDone] = useState(false);
+  const [forceReady, setForceReady] = useState(false);
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
@@ -25,12 +30,17 @@ export default function AppSplash({ ready, onFinished }: AppSplashProps) {
   }, []);
 
   useEffect(() => {
-    if (ready && revealDone && !exiting) {
+    const timer = setTimeout(() => setForceReady(true), MAX_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if ((ready || forceReady) && revealDone && !exiting) {
       setExiting(true);
       const timer = setTimeout(onFinished, EXIT_MS);
       return () => clearTimeout(timer);
     }
-  }, [ready, revealDone, exiting, onFinished]);
+  }, [ready, forceReady, revealDone, exiting, onFinished]);
 
   return (
     <div className={`app-splash${exiting ? " is-exiting" : ""}`}>

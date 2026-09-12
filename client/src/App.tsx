@@ -442,7 +442,10 @@ function App() {
   const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
-    initializeAuth().then(() => setAuthReady(true));
+    // .finally rather than .then: initializeAuth's own try/catch means this
+    // shouldn't reject, but if it somehow does, the splash must still be
+    // told the check is over instead of blocking the whole app forever.
+    initializeAuth().finally(() => setAuthReady(true));
     initAdMob();
     // Both of these only *peek* at whatever the ATT status already is — they never prompt.
     // The native ATT dialog is requested exclusively from the custom TrackingPermissionPopup on

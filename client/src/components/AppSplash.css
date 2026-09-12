@@ -18,6 +18,10 @@
 }
 
 .app-splash.is-exiting {
+  /* Stop intercepting taps the instant the fade starts, not once it finishes
+     480ms later — a fading-but-still-present full-screen layer would
+     otherwise keep swallowing every tap underneath for that whole window. */
+  pointer-events: none;
   animation: appSplashExit 480ms cubic-bezier(.4, 0, .2, 1) forwards;
 }
 
