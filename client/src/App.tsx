@@ -19,6 +19,7 @@ import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useTranslation } from "react-i18next";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
+import AppSplash from "@/components/AppSplash";
 
 // Pages
 import Home from "@/pages/home";
@@ -437,9 +438,11 @@ function App() {
   const isOnline = useOnlineStatus();
   const { t } = useTranslation("common");
   const offlineMessage = t("offlineMessage");
+  const [authReady, setAuthReady] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
-    initializeAuth();
+    initializeAuth().then(() => setAuthReady(true));
     initAdMob();
     // Both of these only *peek* at whatever the ATT status already is — they never prompt.
     // The native ATT dialog is requested exclusively from the custom TrackingPermissionPopup on
@@ -490,6 +493,9 @@ function App() {
           <WouterRouter hook={useReplaceOnlyLocation}>
             <Router />
           </WouterRouter>
+          {!splashDone && (
+            <AppSplash ready={authReady} onFinished={() => setSplashDone(true)} />
+          )}
         </div>
       </TooltipProvider>
     </QueryClientProvider>
