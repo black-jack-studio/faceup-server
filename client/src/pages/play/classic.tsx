@@ -66,6 +66,12 @@ const AUTO_DISMISS_MS = 3250;
 // This shorter delay only applies when canOfferDouble is false, so a real win — the one case
 // actually worth the wait — is untouched.
 const AUTO_DISMISS_QUICK_MS = 1000;
+// How long a 2-card flip actually takes on screen — shared by handleDismissResult's own
+// flipDurationMs (the just-finished hand's cards turning face down) and the auto-hand-reveal
+// gate near canHit/canStand below (a freshly auto-dealt hand's own 2 cards turning face up) —
+// same PlayingCard flip animation either direction. hideDelay staggers 60ms per card index (see
+// HandCards) and the flip itself takes 500ms, plus a small buffer.
+const TWO_CARD_FLIP_MS = 60 + 500 + 100;
 
 interface ClassicModeProps {
   // Shown as an overlay on Home (see home.tsx) instead of routing away, so the slide up/down
@@ -378,6 +384,30 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     if (action === "split") split();
   };
 
+  // EXPERIMENTAL, auto-bet only (Anatole, 2026-09-12): gameState flips to "playing" the instant
+  // the server responds with a freshly auto-dealt hand — before that hand's own 2 cards have
+  // actually finished flipping face up on screen (same TWO_CARD_FLIP_MS animation the round-end
+  // turn-over uses, just the other direction). Hit/Stand/Double/Split/Swap read gameState
+  // directly (see isHandInteractable below), so without this they lit up — tappable-looking —
+  // before there was anything dealt yet to actually tap ("je voudrais qu'ils redeviennent
+  // clairs... quand toutes les cartes sont retournées, pas avant. Mais pas trop tard non
+  // plus"). prevGameStateForAutoRevealRef tracks the TRANSITION into "playing", not just its
+  // current value, so turning auto-bet on mid-hand (gameState already "playing", nothing left
+  // to reveal) can't wrongly replay this grace period.
+  const prevGameStateForAutoRevealRef = useRef(gameState);
+  const [autoHandRevealing, setAutoHandRevealing] = useState(false);
+  useEffect(() => {
+    const wasAlreadyPlaying = prevGameStateForAutoRevealRef.current === "playing";
+    prevGameStateForAutoRevealRef.current = gameState;
+    if (wasAlreadyPlaying || gameState !== "playing" || !autoBetEnabled) return;
+    setAutoHandRevealing(true);
+    const timer = setTimeout(() => setAutoHandRevealing(false), TWO_CARD_FLIP_MS);
+    return () => clearTimeout(timer);
+  }, [gameState, autoBetEnabled]);
+  // What Hit/Stand/Double/Split/Swap actually check instead of a bare gameState === "playing" —
+  // see autoHandRevealing's own comment just above for why.
+  const isHandInteractable = gameState === "playing" && !autoHandRevealing;
+
   // Same "first decision" window Double uses — still the starting 2-card hand, nothing
   // played yet — minus split hands (v1 keeps this simple, see the server route's comment).
   // Also gated on the hand actually being weak: winProbability is a server-side Monte Carlo
@@ -389,7 +419,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // tapping it spends one or plays a rewarded ad instead; the button stays equally "live"
   // either way.
   const swapEligible =
-    gameState === "playing" &&
+    isHandInteractable &&
     !isSplit &&
     playerHand.length === 2 &&
     (winProbability ?? 1) < 0.5;
@@ -539,10 +569,9 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     setIsRoundEnding(true);
 
     // Always exactly 2 cards actually flip now (see the trim above — anything beyond that never
-    // animates, it's just gone), so this no longer needs to scale with hand size: hideDelay
-    // staggers 60ms per card index (see HandCards) and the flip itself takes 500ms, plus a
-    // small buffer.
-    const flipDurationMs = 60 + 500 + 100;
+    // animates, it's just gone), so this no longer needs to scale with hand size — see
+    // TWO_CARD_FLIP_MS's own comment above.
+    const flipDurationMs = TWO_CARD_FLIP_MS;
 
     setTimeout(() => {
       // resultType is deliberately NOT cleared here. GameResultOverlay bails out with
@@ -1217,11 +1246,13 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                   // swapVisuallyDisabled's own comment above for why. handlePlayerAction still
                   // checks it before actually firing hit/stand/double/split, so a tap during
                   // that brief window is a no-op, not a race — it just doesn't greyscale the
-                  // whole row for it any more.
-                  canHit={gameState === "playing" && !isSwitchingSplitHand}
-                  canStand={gameState === "playing" && !isSwitchingSplitHand}
-                  canDouble={gameState === "playing" && !isSwitchingSplitHand && !!canDouble && balance >= bet}
-                  canSplit={gameState === "playing" && !isSwitchingSplitHand && !!canSplit && balance >= bet}
+                  // whole row for it any more. isHandInteractable (not a bare gameState check)
+                  // is what keeps these dark through a freshly auto-dealt hand's own reveal —
+                  // see its own comment above.
+                  canHit={isHandInteractable && !isSwitchingSplitHand}
+                  canStand={isHandInteractable && !isSwitchingSplitHand}
+                  canDouble={isHandInteractable && !isSwitchingSplitHand && !!canDouble && balance >= bet}
+                  canSplit={isHandInteractable && !isSwitchingSplitHand && !!canSplit && balance >= bet}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
                   onDouble={() => handlePlayerAction("double")}
