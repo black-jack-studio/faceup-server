@@ -24,10 +24,11 @@ interface WinStreakBarProps {
   onCelebrationDone?: () => void;
 }
 
-// Horizontal fill bar in a pill, inline (not absolutely positioned) — meant to sit in the
-// betting screen's own result slot (see classic.tsx). Mount/unmount and its fade in/out are
-// entirely the caller's responsibility — this component just renders the pill itself for
-// whatever streak (and celebration) it's given.
+// Horizontal fill bar in a pill, inline (not absolutely positioned) — sits just above the
+// Watch-to-2X button, in the same bottom box (see classic.tsx's showWatchToDouble branch;
+// Anatole, 2026-09-12 — previously lived in the betting screen's own result slot instead).
+// Mount/unmount and its fade in/out are entirely the caller's responsibility — this component
+// just renders the pill itself for whatever streak (and celebration) it's given.
 export default function WinStreakBar({ streak, celebrationBonus, onCelebrationDone }: WinStreakBarProps) {
   const { t } = useTranslation("gameplay");
   const celebrating = celebrationBonus != null;

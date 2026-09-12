@@ -559,11 +559,15 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // actually double, and a gameId to double it against (naturals settle immediately server-
   // side and always carry one, see /api/game/start).
   const canOfferDouble = !!gameId && isWinResult && netResultAmount > 0;
+  // The Watch-to-2X button is actually showing (see its own block below) — also drives the
+  // bottom box's taller height tier, since the win streak bar now shares that box with the
+  // button (Anatole, 2026-09-12).
+  const showWatchToDouble = showResult && canOfferDouble;
 
   const { data: doubleRewardStatus, refetch: refetchDoubleRewardStatus } = useQuery({
     queryKey: ["/api/game/double-reward/status"],
     queryFn: () => gameService.getDoubleRewardStatus(),
-    enabled: showResult && canOfferDouble,
+    enabled: showWatchToDouble,
   });
   const watchedToday = doubleRewardStatus?.watchedToday ?? 0;
   const dailyLimit = doubleRewardStatus?.limit ?? 3;
@@ -752,11 +756,9 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             anchor point).
 
             During betting (isBetting true) RoundResultBanner itself renders nothing (show is
-            false) — the streak bar takes over this same otherwise-empty slot instead, centered
-            the same way. It used to sit inside the bet wheel's own box below, right on top of
-            "YOUR BET" (Anatole, 2026-09-10) — this spot is the one that was actually meant:
-            between the dealer's total above and the player's own cards below, same as every
-            version of this bar before it. */}
+            false), so this slot is simply empty — the win streak bar used to take over it, but
+            it now sits above the Watch-to-2X button instead (Anatole, 2026-09-12 — see that
+            button's own block below). */}
         <div
           ref={resultRef}
           className="pt-20 min-h-[140px] flex flex-col items-center justify-center"
@@ -770,13 +772,6 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             maxBet={ROOM.maxBet}
             onDismiss={handleDismissResult}
           />
-          {isBetting && (displayedStreak > 0 || streakCelebrationBonus != null) && (
-            <WinStreakBar
-              streak={displayedStreak}
-              celebrationBonus={streakCelebrationBonus}
-              onCelebrationDone={() => setStreakCelebrationBonus(null)}
-            />
-          )}
         </div>
       </div>
 
@@ -873,10 +868,14 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             The CSS height transition below covers the same ground more cheaply: the box still
             only ever has one of two heights, but now animates between them instead of snapping,
             so the one moment they actually differ (BET tapped, wheel and ActionBar briefly
-            dual-mounted mid-crossfade) reads as one deliberate resize instead of a pop. */}
+            dual-mounted mid-crossfade) reads as one deliberate resize instead of a pop.
+
+            showWatchToDouble also claims the taller 172 tier (Anatole, 2026-09-12): the win
+            streak bar now sits above the Watch-to-2X button in that state (see its own block
+            below), needing the same room budget as the bet wheel's text+slider+button stack. */}
         <div
           className="w-full flex flex-col justify-center relative transition-[height] duration-300 ease-out"
-          style={{ height: isBetting ? 172 : 128 }}
+          style={{ height: isBetting || showWatchToDouble ? 172 : 128 }}
         >
           {/* Sequential fade, same reasoning as the header block above (see there and
               isRoundStart's own comment) — this bit of UI (the wheel vs. ActionBar) uses the
@@ -994,7 +993,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                   )}
                 </div>
               </motion.div>
-            ) : isRoundEnding ? null : showResult && canOfferDouble ? (
+            ) : isRoundEnding ? null : showWatchToDouble ? (
               // Replaces Hit/Stand/Double/Swap the instant a win is showing (same crossfade as
               // every other swap in this box — see fadeMode above) rather than leaving them
               // mounted-but-disabled underneath the result the way the old small pill in
@@ -1011,8 +1010,21 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                 // true — exactly the stretch this button exists for), which would otherwise
                 // swallow every tap meant for it. Matches the z-index RoundResultBanner's own
                 // content already uses to clear that same layer.
-                className="absolute inset-0 z-30 flex flex-col justify-end"
+                //
+                // items-center + gap-4: the win streak bar (Anatole, 2026-09-12 — moved here
+                // from the betting screen, see its own component for why) now shares this box
+                // with the button, stacked right above it rather than centered on its own.
+                // justify-end still anchors the pair to the real bottom, the same edge the bet
+                // wheel's own button uses in the 172px tier below.
+                className="absolute inset-0 z-30 flex flex-col items-center justify-end gap-4"
               >
+                {(displayedStreak > 0 || streakCelebrationBonus != null) && (
+                  <WinStreakBar
+                    streak={displayedStreak}
+                    celebrationBonus={streakCelebrationBonus}
+                    onCelebrationDone={() => setStreakCelebrationBonus(null)}
+                  />
+                )}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
