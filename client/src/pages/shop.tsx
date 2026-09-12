@@ -464,11 +464,9 @@ export default function Shop() {
         throw new Error(result.error || "Purchase failed");
       }
 
-      // Success toast
-      toast({
-        message: t("purchaseSuccessMessage", { label: offerLabel(offer) }),
-        duration: 3000,
-      });
+      // No success toast here (Anatole, 2026-09-13: "je veux que tu retires cette notif") — the
+      // coin/swap-token-flight animation into the header (firePurchaseCoinAnim above) already
+      // confirms the purchase landed, a toast on top of that was redundant/annoying.
 
       // Sync with server
       await loadUser();
