@@ -73,6 +73,11 @@ const AUTO_DISMISS_QUICK_MS = 1000;
 // same PlayingCard flip animation either direction. hideDelay staggers 60ms per card index (see
 // HandCards) and the flip itself takes 500ms, plus a small buffer.
 const TWO_CARD_FLIP_MS = 60 + 500 + 100;
+// Mirrors server/routes.ts's recordGameSettlement XP formula exactly — see
+// predictedXpGained's own comment below for why, and for the one case (a split) this
+// deliberately doesn't try to predict. Keep these two in sync if that formula ever changes.
+const XP_PER_WIN = 5;
+const BLACKJACK_XP_BONUS = 7;
 
 interface ClassicModeProps {
   // Shown as an overlay on Home (see home.tsx) instead of routing away, so the slide up/down
@@ -117,6 +122,17 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // then, see WinStreakBar's own comment on why). null the rest of the time; WinStreakBar clears
   // it back to null itself once its own timer's up.
   const [streakCelebrationBonus, setStreakCelebrationBonus] = useState<number | null>(null);
+  // EXPERIMENTAL (Anatole, 2026-09-12: "le +1 et le +5 XP... je veux que ça arrive en même
+  // temps") — the server computes and persists this hand's own XP AFTER already responding
+  // (see recordGameSettlement's own "Response already sent" comment in routes.ts), which is
+  // exactly why RoundResultBanner's real xpGained only ever lands via a delayed async poll+diff,
+  // visibly after the win amount. Set at the same reveal instant as displayedStreak, from the
+  // same client-side mirror of the server's own XP formula (see XP_PER_WIN/BLACKJACK_XP_BONUS
+  // above) — RoundResultBanner shows this immediately and only replaces it once its own real
+  // value actually arrives (see its own predictedXpGained prop). null for a split (see
+  // revealResultRef's own comment on why) or a non-win, where RoundResultBanner just falls back
+  // to waiting on the real value like it always has.
+  const [predictedXpGained, setPredictedXpGained] = useState<number | null>(null);
   // EXPERIMENTAL, see RESULT_TO_STREAK_DELAY_MS above — flips true partway through a result's
   // display, hiding RoundResultBanner (see hideResultBanner below, not this) so it starts its
   // own exit fade.
@@ -508,6 +524,15 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     const isBlackjack = playerHand.length === 2 && playerHandValue === 21;
     const type: GameResultType =
       result === "win" && isBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
+
+    // See predictedXpGained's own comment above — not attempted for a split hand:
+    // recordGameSettlement counts wins/blackjacks across every one of a split's sub-hands, which
+    // this single resultType can't represent.
+    setPredictedXpGained(
+      isSplit || (type !== "win" && type !== "blackjack")
+        ? null
+        : (type === "blackjack" ? XP_PER_WIN + BLACKJACK_XP_BONUS : XP_PER_WIN) * (lastStreakBonus ? 2 : 1)
+    );
 
     setNetResultAmount(lastNetResult ?? 0);
     // Snapshot BEFORE applying pendingCoins below — see preRevealBalance's own comment for why
@@ -919,6 +944,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             doubledTo={doubledTo}
             isDoubling={isDoubling}
             maxBet={ROOM.maxBet}
+            predictedXpGained={predictedXpGained}
             onDismiss={handleDismissResult}
           />
           <AnimatePresence>

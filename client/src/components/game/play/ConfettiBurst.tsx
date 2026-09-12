@@ -14,10 +14,12 @@ interface Particle {
 }
 
 // A short, cheap burst — no canvas/library, just a handful of framer-motion divs flung out
-// from the center and fading as they fall. Bigger/further-flung and a touch longer-lived than
-// it used to be (Anatole, 2026-09-12: "un peu plus en mode wow"), but still brief — see the
-// transition below — to match the "vite fait" result sequence around it, not a lingering
-// full-screen celebration.
+// from the center and fading as they fall. Denser than it used to be (Anatole, 2026-09-12:
+// "vraiment que ça explose... qu'il y en ait plus"), but the distance was dialed back down at
+// the same time — more pieces packed into a tighter radius reads as one punchy burst, where
+// more pieces AND more spread just read as confetti scattered everywhere ("pas partout").
+// Still brief — see the transition below — to match the "vite fait" result sequence around it,
+// not a lingering full-screen celebration.
 export default function ConfettiBurst({ active, count = 14 }: { active: boolean; count?: number }) {
   // Regenerated only when the burst actually (re)starts — a stable particle layout for the
   // whole ~900ms life of one burst, not reshuffled every render while it's playing.
@@ -27,9 +29,9 @@ export default function ConfettiBurst({ active, count = 14 }: { active: boolean;
       const angle = (i / count) * Math.PI * 2 + (Math.random() * 0.5 - 0.25);
       return {
         angle,
-        distance: 60 + Math.random() * 90,
+        distance: 40 + Math.random() * 70,
         color: COLORS[i % COLORS.length],
-        delay: Math.random() * 0.08,
+        delay: Math.random() * 0.06,
         rotate: Math.random() * 360,
         size: 6 + Math.random() * 6,
         square: i % 2 === 0,

@@ -68,6 +68,12 @@ interface RoundResultBannerProps {
   // layer below still needs to hold off during it (dismissing mid-flight would tear the result
   // down before an in-flight claim has anywhere left to show its own confirmation).
   isDoubling: boolean;
+  // classic.tsx's own instant, client-side guess at this hand's XP gain (see its own comment) —
+  // shown right away so the XP row doesn't visibly lag the win amount by however long the real
+  // value's async poll+diff (below) takes. null whenever classic.tsx didn't attempt one (a
+  // split, or no XP to gain this hand) — this component just falls back to waiting on the real
+  // value alone in that case, same as before this existed.
+  predictedXpGained?: number | null;
   // Fires when the player taps anywhere on screen while the result is showing (see the
   // full-screen dim layer below — this deliberately never fires on its own anymore). classic.tsx
   // uses this as the single cue to start flipping the cards back and reopening the bet wheel
@@ -86,6 +92,7 @@ export default function RoundResultBanner({
   doubledTo,
   isDoubling,
   maxBet,
+  predictedXpGained,
   onDismiss,
 }: RoundResultBannerProps) {
   const { t } = useTranslation("gameplay");
@@ -162,7 +169,11 @@ export default function RoundResultBanner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, resultType]);
 
-  const xpGained = rewardsSummary?.xpGained ?? 0;
+  // rewardsSummary?.xpGained (the real, server-confirmed value, once its own delayed poll+diff
+  // above resolves) always wins once it's there; predictedXpGained is only what fills this in
+  // the meantime, letting the row show a number in the very same frame as the win amount instead
+  // of empty until that resolves — see predictedXpGained's own comment on its prop.
+  const xpGained = rewardsSummary?.xpGained ?? predictedXpGained ?? 0;
   const hasRewardsRowContent = xpGained > 0;
   // Only win/blackjack ever carry XP (xpPerWin, server/routes.ts) — reserving this row's height
   // for loss/tie would leave a permanent empty gap under a result that was never going to grow
