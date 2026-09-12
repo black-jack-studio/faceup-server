@@ -73,6 +73,14 @@ const AUTO_DISMISS_QUICK_MS = 1000;
 // same PlayingCard flip animation either direction. hideDelay staggers 60ms per card index (see
 // HandCards) and the flip itself takes 500ms, plus a small buffer.
 const TWO_CARD_FLIP_MS = 60 + 500 + 100;
+// How long whatever's currently in the result slot (RoundResultBanner, or — once the handoff's
+// happened — the win streak bar) takes to actually fade out once dismissed, before the cards'
+// own flip-back starts — matches both of their own exit transitions. Used to fire in the same
+// instant as showResult flipping false, so that fade-out was playing out AT THE SAME TIME as
+// the cards already turning, cutting it visually short (Anatole, 2026-09-13: "la barre de
+// streak, elle fond, mais trop tard ... l'animation ... devrait commencer vraiment quand la
+// barre de streak disparaît vraiment").
+const RESULT_CONTENT_EXIT_MS = 300;
 // Mirrors server/routes.ts's recordGameSettlement XP formula exactly — see
 // predictedXpGained's own comment below for why, and for the one case (a split) this
 // deliberately doesn't try to predict. Keep these two in sync if that formula ever changes.
@@ -214,6 +222,12 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // see the setTimeout in handleDismissResult for why, and why the delay is computed rather
   // than a flat guess.
   const [isRoundEnding, setIsRoundEnding] = useState(false);
+  // True for handleDismissResult's ENTIRE span, starting RESULT_CONTENT_EXIT_MS earlier than
+  // isRoundEnding itself (see that constant's own comment) — the Watch-to-2X/ActionBar box
+  // reads this instead of isRoundEnding for its own null-out-during-dismissal branch, so it
+  // doesn't fall through to a fresh (wrong) ActionBar mount for that extra head-start window
+  // before isRoundEnding actually flips.
+  const [isDismissing, setIsDismissing] = useState(false);
 
   // After a split, the server switches currentSplitHand to the next hand in the very same
   // response that settled the first one (a bust, a stand) — without this lag, the swap
@@ -578,46 +592,55 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     if (dismissedRef.current) return;
     dismissedRef.current = true;
     setShowResult(false);
-    // Flips the two starting cards of each hand back to their card-back face, in place — see
-    // HandCards' forceHidden and card.tsx's hideDelay. Any card beyond those two (a hit) is
-    // trimmed the same instant isRoundEnding flips (see the dealer/player HandCards below,
-    // which slice dealerHand/playerHand down to 2 whenever isRoundEnding is true) — deliberately
-    // BEFORE the flip, not after: trimming first, while cards.length is still >0 so HandCards'
-    // row is still in its normal (not-placeholder) layout mode, lets the row's own `layout`
-    // animation smoothly slide the two remaining cards into their now-centered spot at the same
-    // time forceHidden turns them over — one continuous "slide while turning" motion instead of
-    // the hand sitting there fully turned for a beat and only then snapping sideways once extra
-    // cards disappeared. dealerHand/playerHand themselves are otherwise left alone here:
-    // clearing them immediately would swap the real cards for the next hand's placeholders while
-    // still mid-turn, and a data swap mid-rotation is visible as a flicker (a card's front face
-    // is still partly on screen until it's rotated ~edge-on). Only once the flip is done (the
-    // timeout below) is it safe to reset.
-    setIsRoundEnding(true);
+    setIsDismissing(true);
 
-    // Always exactly 2 cards actually flip now (see the trim above — anything beyond that never
-    // animates, it's just gone), so this no longer needs to scale with hand size — see
-    // TWO_CARD_FLIP_MS's own comment above.
-    const flipDurationMs = TWO_CARD_FLIP_MS;
-
+    // Waits out RESULT_CONTENT_EXIT_MS (see its own comment above) before touching anything
+    // else — everything below this used to fire in the very same tick as setShowResult(false)
+    // above, starting the cards' own flip-back at the exact same instant whatever was in the
+    // result slot began fading out, instead of after.
     setTimeout(() => {
-      // resultType is deliberately NOT cleared here. GameResultOverlay bails out with
-      // `if (!resultType) return null` before it ever reaches its own AnimatePresence — clearing
-      // resultType in the same tick as show=false used to unmount that AnimatePresence outright,
-      // skipping its slide-down/backdrop-fade exit animation entirely instead of playing it. That
-      // let the sheet vanish in a single frame instead of actually sliding away — the "flash"
-      // this fixes. Leaving resultType in place lets `show={false}` drive a real exit; it gets
-      // overwritten with a fresh value next time revealResultRef.current() fires, so there's
-      // nothing to reset it back to in the meantime.
-      resetGame();
-      setIsRoundEnding(false);
-      // currentBet is left as-is on purpose — the wheel reopens pre-loaded with the same
-      // amount so tapping BET again instantly rebets, per the "recommencer à l'infini" flow.
-      // Auto-bet's actual trigger: fires the very next bet the instant the wheel would
-      // otherwise just be sitting there waiting for a tap. handlePlaceBet's own guards
-      // (balance, isPlacingBet) still apply, so running out of coins mid-streak just leaves the
-      // wheel idle on the next tick rather than throwing — no stop-loss/stop-win by design.
-      if (autoBetEnabled) handlePlaceBet(true);
-    }, flipDurationMs);
+      // Flips the two starting cards of each hand back to their card-back face, in place — see
+      // HandCards' forceHidden and card.tsx's hideDelay. Any card beyond those two (a hit) is
+      // trimmed the same instant isRoundEnding flips (see the dealer/player HandCards below,
+      // which slice dealerHand/playerHand down to 2 whenever isRoundEnding is true) — deliberately
+      // BEFORE the flip, not after: trimming first, while cards.length is still >0 so HandCards'
+      // row is still in its normal (not-placeholder) layout mode, lets the row's own `layout`
+      // animation smoothly slide the two remaining cards into their now-centered spot at the same
+      // time forceHidden turns them over — one continuous "slide while turning" motion instead of
+      // the hand sitting there fully turned for a beat and only then snapping sideways once extra
+      // cards disappeared. dealerHand/playerHand themselves are otherwise left alone here:
+      // clearing them immediately would swap the real cards for the next hand's placeholders while
+      // still mid-turn, and a data swap mid-rotation is visible as a flicker (a card's front face
+      // is still partly on screen until it's rotated ~edge-on). Only once the flip is done (the
+      // timeout below) is it safe to reset.
+      setIsRoundEnding(true);
+
+      // Always exactly 2 cards actually flip now (see the trim above — anything beyond that never
+      // animates, it's just gone), so this no longer needs to scale with hand size — see
+      // TWO_CARD_FLIP_MS's own comment above.
+      const flipDurationMs = TWO_CARD_FLIP_MS;
+
+      setTimeout(() => {
+        // resultType is deliberately NOT cleared here. GameResultOverlay bails out with
+        // `if (!resultType) return null` before it ever reaches its own AnimatePresence — clearing
+        // resultType in the same tick as show=false used to unmount that AnimatePresence outright,
+        // skipping its slide-down/backdrop-fade exit animation entirely instead of playing it. That
+        // let the sheet vanish in a single frame instead of actually sliding away — the "flash"
+        // this fixes. Leaving resultType in place lets `show={false}` drive a real exit; it gets
+        // overwritten with a fresh value next time revealResultRef.current() fires, so there's
+        // nothing to reset it back to in the meantime.
+        resetGame();
+        setIsRoundEnding(false);
+        setIsDismissing(false);
+        // currentBet is left as-is on purpose — the wheel reopens pre-loaded with the same
+        // amount so tapping BET again instantly rebets, per the "recommencer à l'infini" flow.
+        // Auto-bet's actual trigger: fires the very next bet the instant the wheel would
+        // otherwise just be sitting there waiting for a tap. handlePlaceBet's own guards
+        // (balance, isPlacingBet) still apply, so running out of coins mid-streak just leaves the
+        // wheel idle on the next tick rather than throwing — no stop-loss/stop-win by design.
+        if (autoBetEnabled) handlePlaceBet(true);
+      }, flipDurationMs);
+    }, RESULT_CONTENT_EXIT_MS);
   };
 
   // Read via .current in the two effects below rather than closed over directly, same reason as
@@ -1079,7 +1102,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
               flash a control in that was never there a moment ago. A hand with nothing to watch
               (loss/push) was already showing this exact same disabled ActionBar the whole time
               the result sat on screen (see the `showWatchToDouble ? ... : actions` branch
-              below) — forcing it through `null` and back for isRoundEnding there was a pure
+              below) — forcing it through `null` and back there for no reason was a pure
               unmount/remount for no visual reason, which is what read as the buttons vanishing
               then popping back in dark, instead of just staying put and lighting up once the
               deal lands (Anatole, 2026-09-12: "je veux pas qu'ils disparaissent puis
@@ -1186,7 +1209,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                   )}
                 </div>
               </motion.div>
-            ) : isRoundEnding && canOfferDouble ? null : showWatchToDouble ? (
+            ) : isDismissing && canOfferDouble ? null : showWatchToDouble ? (
               // Replaces Hit/Stand/Double/Swap the instant a win is showing (same crossfade as
               // every other swap in this box — see fadeMode above) rather than leaving them
               // mounted-but-disabled underneath the result the way the old small pill in
