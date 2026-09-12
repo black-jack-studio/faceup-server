@@ -57,6 +57,9 @@ import chestPurpleImage from "@assets/battlepass_chests/chest_purple_1787823960.
 import chestCrownImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
 import { formatFullNumber } from "@/lib/formatUtils";
 import { purchaseConsumable, PurchaseCancelledError } from "@/lib/revenuecat";
+import CoinBurst from "@/components/game/play/CoinBurst";
+import CountingBalance from "@/components/game/CountingBalance";
+import { COIN_STAGGER, COIN_FLIGHT_DURATION } from "@/lib/coinFlightTiming";
 
 const CHEST_IMAGES: Record<ChestTier, string> = {
   gold: chestGoldImage,
@@ -211,6 +214,29 @@ export default function Shop() {
   const [confirmChestTier, setConfirmChestTier] = useState<ChestTier | null>(null);
   const [confirmOffer, setConfirmOffer] = useState<any | null>(null);
 
+  // Same coins-fly-into-the-header celebration as claiming a challenge on Home (see that
+  // page's own claimCoinAnim/CoinBurst comment) — for a Gem Exchange purchase now too (Anatole,
+  // 2026-09-13: "la même chose pour... les coins... et pareil pour les coins swap"). shopRootRef
+  // is CoinBurst's own required position:relative ancestor. coinsHeaderRef/swapTokensHeaderRef
+  // are this page's own header balances (separate from Home's) — whichever one actually
+  // changed is what the coins fly to. purchaseSourceRef holds the tapped offer tile's own DOM
+  // node, captured at tap time (requestGemOfferPurchase) rather than at confirm time: the
+  // confirm sheet is what's actually on screen at that later point, not the tile itself, and
+  // the tile is still the same mounted element either way (gemOffers is a static list).
+  const shopRootRef = useRef<HTMLDivElement>(null);
+  const coinsHeaderRef = useRef<HTMLSpanElement>(null);
+  const swapTokensHeaderRef = useRef<HTMLSpanElement>(null);
+  const purchaseSourceRef = useRef<HTMLElement | null>(null);
+  // Fixed, generous count regardless of the offer's own size — same reasoning as Home's
+  // challenge-claim burst: there's no "table max bet" to scale a tier against here either.
+  const GEM_EXCHANGE_COIN_COUNT = 10;
+  const [purchaseAnim, setPurchaseAnim] = useState<{ type: "coins" | "swapTokens"; from: number; to: number } | null>(null);
+  const firePurchaseCoinAnim = (type: "coins" | "swapTokens", from: number, to: number) => {
+    setPurchaseAnim({ type, from, to });
+    const totalMs = (GEM_EXCHANGE_COIN_COUNT - 1) * COIN_STAGGER * 1000 + COIN_FLIGHT_DURATION * 1000 + 250;
+    setTimeout(() => setPurchaseAnim(null), totalMs);
+  };
+
   // Scroll target for the insufficient-gems case on both Chests and Gem Exchange below --
   // Anatole didn't want a toast (easy to miss) or a darkened, dead-feeling card; tapping
   // something you can't afford now takes you straight to where you'd buy more gems instead.
@@ -252,12 +278,13 @@ export default function Shop() {
     setConfirmChestTier(tier);
   };
 
-  const requestGemOfferPurchase = (offer: any) => {
+  const requestGemOfferPurchase = (offer: any, sourceEl?: HTMLElement) => {
     if (!user || isPurchasing) return;
     if ((user.gems || 0) < offer.gemCost) {
       scrollToGemPacks();
       return;
     }
+    if (sourceEl) purchaseSourceRef.current = sourceEl;
     setConfirmOffer(offer);
   };
 
@@ -404,13 +431,19 @@ export default function Shop() {
       const newGems = originalGems - offer.gemCost;
       updateUser({ gems: newGems });
 
-      // Update coins/swap tokens optimistically
+      // Update coins/swap tokens optimistically — snapshot the "before" value first (not
+      // read again after updateUser lands), since that's the animation's own starting point;
+      // reading user.coins/swapTokens after this point would already see the new value.
       if (offer.type === 'coins') {
-        const newCoins = (user.coins || 0) + offer.amount;
+        const fromCoins = user.coins || 0;
+        const newCoins = fromCoins + offer.amount;
         updateUser({ coins: newCoins });
+        firePurchaseCoinAnim("coins", fromCoins, newCoins);
       } else if (offer.type === 'swapTokens') {
-        const newSwapTokens = (user.swapTokens || 0) + offer.amount;
+        const fromSwapTokens = user.swapTokens || 0;
+        const newSwapTokens = fromSwapTokens + offer.amount;
         updateUser({ swapTokens: newSwapTokens });
+        firePurchaseCoinAnim("swapTokens", fromSwapTokens, newSwapTokens);
       }
 
       // API call to process purchase (only send offer ID for security)
@@ -520,7 +553,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen text-white overflow-hidden" style={{ backgroundColor: '#000000' }}>
+    <div ref={shopRootRef} className="relative min-h-screen text-white overflow-hidden" style={{ backgroundColor: '#000000' }}>
       {/* Header — fixed in place while the page scrolls underneath, same pattern as home.tsx's
           own header. Mirrors home's header row: a compact balance indicator on each side
           instead of a page title, same font/format as the coins counter that crossfades in
@@ -557,18 +590,58 @@ export default function Shop() {
           </div>
           <div className="flex items-center gap-1.5">
             <Coin size={24} />
-            <span className="text-lg font-light text-accent-gold tabular-nums" data-testid="shop-header-coins">
-              {formatFullNumber(user?.coins || 0)}
+            <span
+              ref={coinsHeaderRef}
+              className="text-lg font-light text-accent-gold tabular-nums"
+              style={purchaseAnim?.type === "coins" ? { color: "#34d399" } : undefined}
+              data-testid="shop-header-coins"
+            >
+              <CountingBalance
+                from={purchaseAnim?.type === "coins" ? purchaseAnim.from : (user?.coins || 0)}
+                to={purchaseAnim?.type === "coins" ? purchaseAnim.to : (user?.coins || 0)}
+                active={purchaseAnim?.type === "coins"}
+                impactCount={purchaseAnim?.type === "coins" ? GEM_EXCHANGE_COIN_COUNT : undefined}
+                showSign={false}
+              />
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <SwapCoin size={24} />
-            <span className="text-lg font-light text-accent-purple tabular-nums" data-testid="shop-header-swap-tokens">
-              {formatFullNumber(user?.swapTokens || 0)}
+            <span
+              ref={swapTokensHeaderRef}
+              className="text-lg font-light text-accent-purple tabular-nums"
+              style={purchaseAnim?.type === "swapTokens" ? { color: "#34d399" } : undefined}
+              data-testid="shop-header-swap-tokens"
+            >
+              <CountingBalance
+                from={purchaseAnim?.type === "swapTokens" ? purchaseAnim.from : (user?.swapTokens || 0)}
+                to={purchaseAnim?.type === "swapTokens" ? purchaseAnim.to : (user?.swapTokens || 0)}
+                active={purchaseAnim?.type === "swapTokens"}
+                impactCount={purchaseAnim?.type === "swapTokens" ? GEM_EXCHANGE_COIN_COUNT : undefined}
+                showSign={false}
+              />
             </span>
           </div>
         </motion.div>
       </header>
+
+      {/* One CoinBurst per possible target — only ever one active at a time (purchaseAnim.type
+          picks which), same as classic.tsx never having more than one relevant burst live at
+          once. */}
+      <CoinBurst
+        active={purchaseAnim?.type === "coins"}
+        sourceRef={purchaseSourceRef}
+        targetRef={coinsHeaderRef}
+        containerRef={shopRootRef}
+        count={GEM_EXCHANGE_COIN_COUNT}
+      />
+      <CoinBurst
+        active={purchaseAnim?.type === "swapTokens"}
+        sourceRef={purchaseSourceRef}
+        targetRef={swapTokensHeaderRef}
+        containerRef={shopRootRef}
+        count={GEM_EXCHANGE_COIN_COUNT}
+      />
 
       {/* Lucky Reels preview — the actual LuckyReelsMachine (see that file), rendered at a
           fixed reference width then shrunk down as a whole with a CSS transform so it's exactly
@@ -881,7 +954,7 @@ export default function Shop() {
                     whileTap={!isBusy ? { scale: 0.98 } : {}}
                     transition={{ duration: 0.2 }}
                     data-testid={`button-buy-${offer.id}`}
-                    onClick={() => !isBusy && requestGemOfferPurchase(offer)}
+                    onClick={(e) => !isBusy && requestGemOfferPurchase(offer, e.currentTarget)}
                     style={{ cursor: isBusy ? 'not-allowed' : 'pointer' }}
                   >
                     <div className={`${offer.type === 'swapTokens' ? 'bg-accent-purple/20' : 'bg-accent-gold/20'} w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2`}>
