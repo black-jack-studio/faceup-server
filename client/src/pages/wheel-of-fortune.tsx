@@ -111,6 +111,23 @@ export default function WheelOfFortunePage() {
     }
   }, [canSpinFree, isSpinning, showReward]);
 
+  // canSpinFree defaults to false (see its own comment) until /can-spin actually answers, so on
+  // every page load displayCanSpinFree starts out false and the effect above then flips it to
+  // true a beat later whenever the real answer is "yes" -- a genuine post-mount change, which is
+  // exactly what the crossfade below is built to animate. That made the Free Spin button
+  // visibly fade in (and the bonus block/normal buttons fade out from underneath it) on every
+  // single arrival where a free spin happened to be available, instead of it just being there
+  // from frame one. This flag is true only for that first catch-up sync and switches both
+  // crossfades (button below, bonus block further down) to duration 0 for it, then clears a beat
+  // later so any *real* later transition (a spin landing, the bonus bar filling up) still
+  // animates normally.
+  const [skipInitialAnimation, setSkipInitialAnimation] = useState(true);
+  useEffect(() => {
+    if (freeSpinStatus === undefined || !skipInitialAnimation) return;
+    const timer = setTimeout(() => setSkipInitialAnimation(false), 50);
+    return () => clearTimeout(timer);
+  }, [freeSpinStatus, skipInitialAnimation]);
+
   // The bonus block's own visibility, one step further removed than displayCanSpinFree above.
   // Bonus unlocking (displayCanSpinFree going false -> true) crossfades the two immediately --
   // that direction already read fine simultaneous. Going the other way (a Free Spin just used,
@@ -122,9 +139,15 @@ export default function WheelOfFortunePage() {
       setBonusBlockVisible(false);
       return;
     }
+    // First real sync (see skipInitialAnimation above): show immediately rather than staggering
+    // in 500ms later, since there's no button fade-out to wait for -- it never faded in.
+    if (skipInitialAnimation) {
+      setBonusBlockVisible(true);
+      return;
+    }
     const timer = setTimeout(() => setBonusBlockVisible(true), 500);
     return () => clearTimeout(timer);
-  }, [displayCanSpinFree]);
+  }, [displayCanSpinFree, skipInitialAnimation]);
 
   const resetCountdownLabel = (() => {
     const hours = Math.floor(secondsUntilReset / 3600);
@@ -393,7 +416,10 @@ export default function WheelOfFortunePage() {
               pointerEvents: displayCanSpinFree ? "auto" : "none",
             }}
             animate={{ opacity: !displayCanSpinFree ? 0 : isSpinning ? 0.5 : 1 }}
-            transition={{ opacity: { duration: 0.5, ease: "easeOut" } }}
+            // duration 0 for the first real sync (see skipInitialAnimation) -- that transition
+            // is the page catching up to an answer it didn't have at mount, not a real change
+            // worth crossfading.
+            transition={{ opacity: { duration: skipInitialAnimation ? 0 : 0.5, ease: "easeOut" } }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
           >
@@ -407,7 +433,7 @@ export default function WheelOfFortunePage() {
               entirely. Anchored from the bottom instead, its bottom edge lines up with the
               button's own (already on-screen) bottom edge, and the extra height grows upward
               into the machine area's slack space above instead of downward off-screen. */}
-          <div className={`absolute inset-x-0 bottom-0 space-y-5 transition-opacity duration-500 ease-out ${bonusBlockVisible ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+          <div className={`absolute inset-x-0 bottom-0 space-y-5 ease-out ${skipInitialAnimation ? "" : "transition-opacity duration-500"} ${bonusBlockVisible ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
             <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
 
             {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
