@@ -98,7 +98,18 @@ export default function Home() {
     if (!cardEl) return;
     claimSourceRef.current = cardEl;
     const from = user?.coins ?? 0;
-    setClaimCoinAnim({ from, to: from + reward });
+    const to = from + reward;
+    // Credited here, in the same tick the animation starts — not left to challenges.tsx's own
+    // loadUser() call to eventually land it whenever its refetch happens to resolve. That
+    // refetch's timing is unpredictable relative to the animation's own ~1.7s run: if it landed
+    // first, the header already read the final number before the count-up had even started; if
+    // it landed after, the count-up finished, handed off to the real value, and the real value
+    // was still the OLD one for a beat until the refetch caught up — a visible snap back down
+    // and then back up. Same fix as the Gem Exchange purchase animation had needed (Anatole,
+    // 2026-09-13: "tu me refais exactement la même chose ... le timing, tout") — crediting and
+    // animating together means the real value is never out of step with what's on screen.
+    updateUser({ coins: to });
+    setClaimCoinAnim({ from, to });
     // Same per-coin stagger/flight duration CoinBurst always uses (see coinFlightTiming) —
     // "je veux pas que les coins y partent trop vite" — reusing it rather than a guessed
     // number is what actually keeps this identical to the game's own version, not just similar.
