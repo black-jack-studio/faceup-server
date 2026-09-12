@@ -376,9 +376,18 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     playerHand.length === 2 &&
     (winProbability ?? 1) < 0.5;
   // Whether tapping Swap right now would actually do anything — separate from whether the
-  // slot should still be occupying the row (see canSwap below). Excludes isProcessingAction
-  // so a mid-hit/stand request doesn't just gray the button, it also blocks the tap.
+  // slot should still be occupying the row (see canSwap below). Includes isProcessingAction so
+  // a mid-hit/stand request doesn't let a Swap tap land mid-race — handleSwap checks this
+  // directly, it's not what the button's own grey-out below follows (see swapVisuallyDisabled).
   const swapClickable = swapEligible && !hasSwapped && !isSwapping && !isProcessingAction;
+  // What the Swap button actually shows as disabled — deliberately NOT swapClickable itself.
+  // isProcessingAction is real but brief (one Hit/Stand/Double round trip), and greying every
+  // button in the row for that instant, then un-greying them a beat later, read as a "wink"
+  // every single tap — even though the hand was never actually unplayable (Anatole, 2026-09-12:
+  // "je veux qu'ils s'assombrissent que quand on ne peut plus jouer"). A stray tap during that
+  // brief window still lands as a harmless no-op via swapClickable inside handleSwap, same as
+  // Hit/Stand/Double/Split already are via handlePlayerAction's own isProcessingAction check.
+  const swapVisuallyDisabled = !swapEligible || hasSwapped || isSwapping;
   // Surrender is gone (see ActionBar's own comment) — Swap now permanently occupies that slot
   // in the row instead of only joining once eligible, same design language as Hit/Stand: always
   // present, just greyed out (via swapDisabled below) whenever a tap wouldn't do anything.
@@ -1148,16 +1157,21 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
               >
                 <ActionBar
                   animateEntrance={false}
-                  canHit={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand}
-                  canStand={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand}
-                  canDouble={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand && !!canDouble && balance >= bet}
-                  canSplit={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand && !!canSplit && balance >= bet}
+                  // isProcessingAction deliberately does NOT gate any of these four — see
+                  // swapVisuallyDisabled's own comment above for why. handlePlayerAction still
+                  // checks it before actually firing hit/stand/double/split, so a tap during
+                  // that brief window is a no-op, not a race — it just doesn't greyscale the
+                  // whole row for it any more.
+                  canHit={gameState === "playing" && !isSwitchingSplitHand}
+                  canStand={gameState === "playing" && !isSwitchingSplitHand}
+                  canDouble={gameState === "playing" && !isSwitchingSplitHand && !!canDouble && balance >= bet}
+                  canSplit={gameState === "playing" && !isSwitchingSplitHand && !!canSplit && balance >= bet}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
                   onDouble={() => handlePlayerAction("double")}
                   onSplit={() => handlePlayerAction("split")}
                   canSwap={canSwap}
-                  swapDisabled={!swapClickable}
+                  swapDisabled={swapVisuallyDisabled}
                   onSwap={handleSwap}
                   swapViaAd={!hasSwapTokens}
                 />
