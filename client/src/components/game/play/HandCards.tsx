@@ -43,9 +43,9 @@ interface HandCardsProps {
   // this instead of a guessed timeout — a guessed one doesn't scale with how many cards the
   // dealer actually drew, so it could fire while several were still mid-animation.
   onDealerHandSettled?: () => void;
-  // Overrides the size-by-card-count default (see CARD_WIDTH/cardSize below) — Play with
-  // Friends needs its own fixed sizes per seat ("friend" for your own hand, "xs" for the
-  // others) rather than Classic's "shrink once the hand gets long" rule.
+  // Overrides the size-by-variant default (see CARD_WIDTH/cardSize below) — Play with Friends
+  // needs its own fixed sizes per seat ("friend" for your own hand, "xs" for the others)
+  // instead of the default player/dealer split.
   cardSize?: CardSize;
   // Forwarded straight to PlayingCard's own radius override — lets a caller keep corner
   // rounding consistent across differently-sized hands sharing one screen (Friends again: the
