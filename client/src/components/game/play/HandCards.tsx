@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import RollingTotal from "./RollingTotal";
 import { cn } from "@/lib/utils";
 import PlayingCard from "../card";
 import { CardSize } from "@/components/PlayingCard";
@@ -379,7 +378,7 @@ export default function HandCards({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
               >
-                <RollingTotal value={playerVisibleTotal} className="font-semibold text-xl text-white tabular-nums" />
+                <span className="font-semibold text-xl text-white tabular-nums">{playerVisibleTotal}</span>
               </motion.div>
             </motion.div>
           )}
@@ -398,7 +397,7 @@ export default function HandCards({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2 }}
             >
-              <RollingTotal value={dealerVisibleTotal} className="font-semibold text-xl text-white tabular-nums" />
+              <span className="font-semibold text-xl text-white tabular-nums">{dealerVisibleTotal}</span>
             </motion.div>
           </div>
         )}
