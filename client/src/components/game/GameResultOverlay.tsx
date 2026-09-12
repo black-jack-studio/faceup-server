@@ -34,8 +34,9 @@ interface GameResultOverlayProps {
 
 // Ticking "HH:MM:SS" until `resetAt`, for the button's grey countdown label once today's 3
 // double-reward ads are used up — recomputes every second rather than once, so it counts
-// down live instead of showing a value frozen at fetch time.
-function useCountdown(resetAt: string | null): string | null {
+// down live instead of showing a value frozen at fetch time. Exported: Classic solo's own
+// Watch-to-2X button (classic.tsx) reuses this instead of a second copy of the same ticker.
+export function useCountdown(resetAt: string | null): string | null {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {

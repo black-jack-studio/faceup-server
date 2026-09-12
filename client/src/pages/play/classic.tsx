@@ -15,7 +15,7 @@ import { BetSlider } from "@/components/BetSlider";
 import HandCards from "@/components/game/play/HandCards";
 import ActionBar from "@/components/game/play/ActionBar";
 import SplitHandsCenterSide from "@/components/game/play/SplitHandsCenterSide";
-import type { GameResultType } from "@/components/game/GameResultOverlay";
+import { useCountdown, type GameResultType } from "@/components/game/GameResultOverlay";
 import RoundResultBanner from "@/components/game/play/RoundResultBanner";
 import WinStreakBar, { CELEBRATION_DURATION_MS } from "@/components/game/play/WinStreakBar";
 import CoinBurst from "@/components/game/play/CoinBurst";
@@ -803,6 +803,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   const watchedToday = doubleRewardStatus?.watchedToday ?? 0;
   const dailyLimit = doubleRewardStatus?.limit ?? 3;
   const dailyLimitReached = watchedToday >= dailyLimit;
+  const resetCountdown = useCountdown(dailyLimitReached ? doubleRewardStatus?.resetAt ?? null : null);
 
   const handleWatchAdToDouble = async () => {
     if (!gameId || isDoubling || doubledTo !== null || dailyLimitReached) return;
@@ -1276,6 +1277,15 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                 // content already uses to clear that same layer.
                 className="absolute inset-0 z-30 flex flex-col justify-end"
               >
+                {/* n/limit remaining today, same grey as the betting screen's "Your bet" label
+                    (text-white/50) — always shows this count, reached or not; only the button
+                    itself (below) changes once the daily plays run out. */}
+                <span
+                  className="text-xs text-white/50 text-center mb-1.5 tabular-nums"
+                  data-testid="text-watch-to-double-count"
+                >
+                  {Math.max(dailyLimit - watchedToday, 0)}/{dailyLimit}
+                </span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1299,6 +1309,11 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                       </svg>
                       {t("resultOverlay.doubled")}
                     </>
+                  ) : dailyLimitReached ? (
+                    // Out of plays for today — the button itself becomes the countdown to the
+                    // next reset, in place of the play icon + label (same treatment as the
+                    // Play with Friends result sheet's own Watch-to-2X button).
+                    <span className="tabular-nums">{resetCountdown ?? "--:--:--"}</span>
                   ) : (
                     <>
                       <WatchAdIcon size={18} strokeWidth={3} />
