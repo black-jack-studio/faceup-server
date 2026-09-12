@@ -440,30 +440,48 @@ export default function Shop() {
       const newGems = originalGems - offer.gemCost;
       updateUser({ gems: newGems });
 
-      // Update coins/swap tokens optimistically — snapshot the "before" value first (not
-      // read again after updateUser lands), since that's the animation's own starting point;
-      // reading user.coins/swapTokens after this point would already see the new value.
+      // Snapshot the "before" value now (not read again later, once updateUser below has
+      // already landed) — this is the animation's own starting point.
       //
-      // firePurchaseCoinAnim itself is deliberately deferred (see its own call sites just
-      // below) rather than fired synchronously here: confirmGemOfferPurchase closes the confirm
-      // BottomSheet (setConfirmOffer(null)) in the very same tick that calls this function, and
-      // that sheet's own scroll lock (useBodyScrollLock, which pins document.body to
-      // position:fixed + a negative top offset while open) only releases in a passive effect's
-      // cleanup — after CoinBurst's own useLayoutEffect would already have measured everything
-      // against that transient, mid-unlock body state. That's what actually sent the coins
-      // flying to the top of the screen instead of into the header number (Anatole,
-      // 2026-09-13). 300ms — past both that release and the sheet's own 0.25s exit — lets
-      // everything settle back to its real, final layout first.
+      // Both the actual updateUser credit AND firePurchaseCoinAnim are deliberately deferred
+      // together, as one pair, rather than crediting immediately here and only the animation
+      // trigger later: they used to be split (credit here, animation 300ms later), which
+      // credited the real balance well before the animation had even started — so the header
+      // already read the final number for that whole 300ms gap, then the animation reset it
+      // back down to 0 and recounted back up, and however far it had gotten by the time its own
+      // timer ended, it snapped straight to the (already-correct, already-stale) real value
+      // instead of finishing its own count (Anatole, 2026-09-13: "ça va augmenter... jusqu'à
+      // arriver à 50, puis d'un coup ça se remet à 500"). Crediting and animating at the exact
+      // same instant means the real value never gets ahead of what's on screen.
+      //
+      // The delay itself is still needed for the reason it was added: confirmGemOfferPurchase
+      // closes the confirm BottomSheet (setConfirmOffer(null)) in the very same tick that calls
+      // this function, and that sheet's own scroll lock (useBodyScrollLock, which pins
+      // document.body to position:fixed + a negative top offset while open) only releases in a
+      // passive effect's cleanup — after CoinBurst's own useLayoutEffect would already have
+      // measured everything against that transient, mid-unlock body state, sending the coins
+      // flying to the top of the screen instead of into the header number. 300ms — past both
+      // that release and the sheet's own 0.25s exit — lets everything settle back to its real,
+      // final layout first.
+      // Cancellable: the purchase can still fail below, after this is already scheduled but
+      // before it's fired — nothing was actually credited yet at that point (unlike gems just
+      // above, which already applied), so failure just cancels it outright rather than needing
+      // to revert anything.
+      let creditTimer: ReturnType<typeof setTimeout> | null = null;
       if (offer.type === 'coins') {
         const fromCoins = user.coins || 0;
         const newCoins = fromCoins + offer.amount;
-        updateUser({ coins: newCoins });
-        setTimeout(() => firePurchaseCoinAnim("coins", fromCoins, newCoins), 300);
+        creditTimer = setTimeout(() => {
+          updateUser({ coins: newCoins });
+          firePurchaseCoinAnim("coins", fromCoins, newCoins);
+        }, 300);
       } else if (offer.type === 'swapTokens') {
         const fromSwapTokens = user.swapTokens || 0;
         const newSwapTokens = fromSwapTokens + offer.amount;
-        updateUser({ swapTokens: newSwapTokens });
-        setTimeout(() => firePurchaseCoinAnim("swapTokens", fromSwapTokens, newSwapTokens), 300);
+        creditTimer = setTimeout(() => {
+          updateUser({ swapTokens: newSwapTokens });
+          firePurchaseCoinAnim("swapTokens", fromSwapTokens, newSwapTokens);
+        }, 300);
       }
 
       // API call to process purchase (only send offer ID for security)
@@ -474,12 +492,9 @@ export default function Shop() {
       const result = await response.json();
 
       if (!response.ok) {
-        // Revert optimistic update
-        updateUser({
-          gems: originalGems,
-          ...(offer.type === 'coins' ? { coins: user.coins || 0 } : {}),
-          ...(offer.type === 'swapTokens' ? { swapTokens: user.swapTokens || 0 } : {}),
-        });
+        if (creditTimer) clearTimeout(creditTimer);
+        // Only gems need reverting — coins/swapTokens were never optimistically applied above.
+        updateUser({ gems: originalGems });
 
         throw new Error(result.error || "Purchase failed");
       }
