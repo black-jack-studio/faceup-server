@@ -975,12 +975,17 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
               true once handleDismissResult's timeout actually calls resetGame() — i.e. once the
               dealer/player cards have finished flipping to their backs (see isRoundEnding) — so
               this box shows nothing at all (the `null` branch below) for that whole stretch,
-              rather than the ActionBar just sitting there disabled or the wheel popping in
-              early. The ActionBar is never actually visible during this gap anyway (it's
-              covered by the result sheet from the moment the hand settles to the moment this
-              fires), so its own exit here is a no-op — but skipping straight past it to `null`
-              is what keeps it that way instead of it flashing on screen once the sheet slides
-              away and before the cards are done turning.
+              but ONLY when the hand that just ended offered Watch-to-2X (canOfferDouble): that
+              case was showing the watch2x button right up to the moment of dismissal, so
+              jumping straight to the disabled ActionBar while the cards are still mid-flip would
+              flash a control in that was never there a moment ago. A hand with nothing to watch
+              (loss/push) was already showing this exact same disabled ActionBar the whole time
+              the result sat on screen (see the `showWatchToDouble ? ... : actions` branch
+              below) — forcing it through `null` and back for isRoundEnding there was a pure
+              unmount/remount for no visual reason, which is what read as the buttons vanishing
+              then popping back in dark, instead of just staying put and lighting up once the
+              deal lands (Anatole, 2026-09-12: "je veux pas qu'ils disparaissent puis
+              réapparaissent, juste qu'ils passent du mode sombre au mode normal").
 
               fadeMode "sync" (round start only) keeps the wheel and ActionBar mounted at the
               same time for the ~200ms crossfade, which is the point — but neither motion.div was
@@ -1083,7 +1088,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                   )}
                 </div>
               </motion.div>
-            ) : isRoundEnding ? null : showWatchToDouble ? (
+            ) : isRoundEnding && canOfferDouble ? null : showWatchToDouble ? (
               // Replaces Hit/Stand/Double/Swap the instant a win is showing (same crossfade as
               // every other swap in this box — see fadeMode above) rather than leaving them
               // mounted-but-disabled underneath the result the way the old small pill in
