@@ -771,7 +771,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         </div>
 
         {table.status === "betting" && (
-          <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-white/50" : "text-white/40"}`}>
+          <span className={`text-[11px] font-medium text-center ${seat.betConfirmed ? "text-white/50" : "text-white/40"}`}>
             {seat.betConfirmed ? t("bet", { amount: formatFullNumber(seat.betAmount ?? 0) }) : isWaitingForBet ? t("waitingForBet") : ""}
           </span>
         )}
