@@ -875,7 +875,15 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             see hideResultBanner/showStreakInResultSlot's own comments above for why those are
             two separate, staggered timers rather than one, and RESULT_EXIT_BUFFER_MS for why:
             the two never actually overlap in the DOM, so this box never has to shrink back down
-            right after the bar arrives. */}
+            right after the bar arrives. Its own wrapper below needs the same relative z-30
+            RoundResultBanner gives itself, for the exact reason explained in that component's
+            own comment and ResultDimOverlay's: with neither, this plain unpositioned div has no
+            stacking context of its own, so ResultDimOverlay's z-26 dim (a root-level sibling
+            several levels up, see classic.tsx's own layout) painted OVER it instead of under —
+            the bar rendering visibly darkened, then briefly reappearing brighter as the dim
+            layer's own faster exit (0.2s) finished before the bar's slower one (0.3s) did
+            (Anatole, 2026-09-12: "le petit bloc... il est assombri... elle réapparaît, puis elle
+            re-disparaît"). */}
         <div
           ref={resultRef}
           className="pt-20 min-h-[140px] flex flex-col items-center justify-center"
@@ -893,6 +901,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             {showResult && showStreakInResultSlot && (displayedStreak > 0 || streakCelebrationBonus != null) && (
               <motion.div
                 key="streak-handoff"
+                className="relative z-30"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, transition: { duration: 0.4, ease: "easeOut" } }}
                 exit={{ opacity: 0, transition: { duration: 0.3, ease: "easeIn" } }}
