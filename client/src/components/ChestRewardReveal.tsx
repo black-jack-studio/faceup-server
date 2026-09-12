@@ -55,6 +55,13 @@ interface ChestRewardRevealProps {
   cardBack: ChestRewardCardBack | null;
   avatar: ChestRewardAvatar | null;
   emote: ChestRewardEmote | null;
+  // Fires once, the instant `revealed` actually flips true (right after the burst) — a caller
+  // that held back crediting the won amount until the player has actually seen it (shop.tsx's
+  // own pendingChestRewardRef) applies it here instead of the moment its own API call resolved,
+  // which used to update the header balance while the player was still tapping through the
+  // suspense animation. Optional: the Battle Pass's own tier-claim caller doesn't need this,
+  // its reward isn't held back the same way.
+  onRevealed?: () => void;
   onDismiss: () => void;
 }
 
@@ -216,7 +223,7 @@ function LightRays({ count, color }: { count: number; color: string }) {
 // chest and drawing a new crack line, a white-flash burst on the last tap, then the actual
 // reveal (resources popping in with a count-up, or -- if an item was won -- a large,
 // deliberately showy flip with a confetti burst, light rays and a tier-colored glow).
-export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack, avatar, emote, onDismiss }: ChestRewardRevealProps) {
+export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack, avatar, emote, onRevealed, onDismiss }: ChestRewardRevealProps) {
   const { t } = useTranslation("chestRewardReveal");
   const [tapCount, setTapCount] = useState(0);
   const [bursting, setBursting] = useState(false);
@@ -278,13 +285,16 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
     return () => clearTimeout(revealTimer);
   }, [bursting, chestControls, glowControls]);
 
-  // Sound + haptics for the reveal cut itself, once, the instant `revealed` flips true.
+  // Sound + haptics for the reveal cut itself, once, the instant `revealed` flips true — same
+  // moment onRevealed fires, so a caller crediting a held-back reward does it in lockstep with
+  // this same cut rather than a beat earlier or later.
   useEffect(() => {
     if (!revealed) return;
     if (isSoundEnabled()) playSound("chestOpen");
     if (theme.haptic === "success") triggerHapticSuccess();
     else if (theme.haptic === "medium") triggerHapticImpact(ImpactStyle.Medium);
     else triggerHapticImpact(ImpactStyle.Light);
+    onRevealed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed]);
 

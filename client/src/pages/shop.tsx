@@ -191,6 +191,15 @@ export default function Shop() {
     | null
   >(null);
   const [showChestReward, setShowChestReward] = useState(false);
+  // The chest's own WON amounts (coins/gems bonus/swapTokens) — held back from the store until
+  // ChestRewardReveal actually shows them (see its own onRevealed prop below), same reasoning
+  // as classic.tsx's pendingRemainingCoins: applying this the instant the API responds updated
+  // the header balance while the player was still tapping through the suspense animation, well
+  // before they'd actually seen what was inside (Anatole, 2026-09-13: "je gagne 500... j'ai à
+  // peine ouvert le coffre que mon nombre de coins s'actualise... avant" que je découvre). The
+  // gem *cost* itself is charged immediately either way, same as any other purchase — there's
+  // nothing to "discover" about a price you already knew when you tapped buy.
+  const pendingChestRewardRef = useRef<{ coins?: number; gems?: number; swapTokens?: number } | null>(null);
   // Unlike every other full-screen overlay in the app, chest opening deliberately does NOT
   // register with the shared overlay-visibility system (see hooks/use-overlay-visibility.ts) --
   // the bottom nav bar stays mounted and visible underneath the whole confirm -> suspense ->
@@ -525,25 +534,28 @@ export default function Shop() {
         emote: ChestRewardEmote | null;
       };
 
+      // The cost itself is charged right away regardless of what's inside — see
+      // pendingChestRewardRef's own comment for why that's fine to do immediately while the
+      // actual WON amounts below are not.
+      const afterCostGems = (user.gems || 0) - cost;
+      updateUser({ gems: afterCostGems });
+
       if (reward.cardBack || reward.avatar || reward.emote) {
-        // Gems were spent, nothing else changes locally — the item itself lives server-side
-        // until the relevant collection query is refetched.
-        updateUser({ gems: (user.gems || 0) - cost });
+        // A won item, not a currency amount — nothing left to hold back at all. The item
+        // itself lives server-side until the relevant collection query is refetched.
+        pendingChestRewardRef.current = null;
         if (reward.cardBack) queryClient.invalidateQueries({ queryKey: ["/api/user/card-backs"] });
         if (reward.avatar) queryClient.invalidateQueries({ queryKey: ["/api/user/owned-avatars"] });
         if (reward.emote) queryClient.invalidateQueries({ queryKey: ["/api/user/emotes"] });
       } else {
-        const updates: any = { gems: (user.gems || 0) - cost };
+        const pending: { coins?: number; gems?: number; swapTokens?: number } = {};
         for (const r of reward.rewards) {
-          if (r.kind === 'coins') updates.coins = (user.coins || 0) + r.amount;
-          if (r.kind === 'gems') updates.gems = updates.gems + r.amount;
-          if (r.kind === 'swapTokens') updates.swapTokens = (user.swapTokens || 0) + r.amount;
+          if (r.kind === 'coins') pending.coins = (user.coins || 0) + r.amount;
+          if (r.kind === 'gems') pending.gems = afterCostGems + r.amount;
+          if (r.kind === 'swapTokens') pending.swapTokens = (user.swapTokens || 0) + r.amount;
         }
-        updateUser(updates);
+        pendingChestRewardRef.current = pending;
       }
-
-      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
 
       setChestReward({ tier, rewards: reward.rewards, cardBack: reward.cardBack, avatar: reward.avatar, emote: reward.emote });
       setShowChestReward(true);
@@ -559,6 +571,18 @@ export default function Shop() {
     const tier = confirmChestTier;
     setConfirmChestTier(null);
     handleOpenChest(tier);
+  };
+
+  // Fired by ChestRewardReveal's own onRevealed — the instant the player actually sees what
+  // was inside (right after its burst animation, well after handleOpenChest's own API call
+  // resolved) — see pendingChestRewardRef's own comment for why this exists.
+  const applyPendingChestReward = () => {
+    if (pendingChestRewardRef.current) {
+      updateUser(pendingChestRewardRef.current);
+      pendingChestRewardRef.current = null;
+    }
+    queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
   };
 
   return (
@@ -1107,6 +1131,7 @@ export default function Shop() {
           cardBack={chestReward.cardBack}
           avatar={chestReward.avatar}
           emote={chestReward.emote}
+          onRevealed={applyPendingChestReward}
           onDismiss={() => setShowChestReward(false)}
         />
       )}
