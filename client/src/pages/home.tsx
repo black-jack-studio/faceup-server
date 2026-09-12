@@ -288,9 +288,14 @@ export default function Home() {
           </div>
         </motion.div>
       </header>
-      {/* Spacer for the now-fixed header above, so content starts where it used to — grows
-          by the same safe-area inset the header's own padding-top just gained. */}
-      <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 96px)" }} />
+      {/* Spacer for the now-fixed header above, so content starts where it used to. No safe-area
+          inset in this calc: unlike the fixed header (which ignores body's padding and needs
+          the inset added back explicitly), this spacer is normal-flow content inside body,
+          which already shifted it down by that same inset via body's own padding-top (see
+          index.css) — adding it again here double-counted it, showing up as extra empty space
+          below the header on any device with a nonzero inset (native, notch/Dynamic Island)
+          while being invisible on web (inset is 0 there). */}
+      <div aria-hidden style={{ height: "96px" }} />
       {/* Coins Display */}
       <motion.div style={{ opacity: 1 - headerBalanceOpacity }}>
         <CoinsHero isVisible={!isHomeCovered} />

@@ -629,12 +629,17 @@ export default function Shop() {
           </motion.span>
         )}
       </motion.div>
-      {/* Spacer for the now-fixed header above, so content starts where it used to — grows
-          by the same safe-area inset the header's own padding-top just gained. */}
+      {/* Spacer for the now-fixed header above, so content starts where it used to. No
+          safe-area inset in this calc: unlike the fixed header (which ignores body's padding
+          and needs the inset added back explicitly), this spacer is normal-flow content inside
+          body, which already shifted it down by that same inset via body's own padding-top
+          (see index.css) — adding it again here double-counted it, showing up as extra empty
+          space between the header and the Chests title on any device with a nonzero inset
+          (native, notch/Dynamic Island) while being invisible on web (inset is 0 there). */}
       {/* +16px on top of the header's own height: the Chests title pill above overlaps
           its section's top edge (-top-3), and without this the fixed header's opaque
           background clips the top of its letters. */}
-      <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 88px + 16px)" }} />
+      <div aria-hidden style={{ height: "calc(88px + 16px)" }} />
       <div className="max-w-md mx-auto px-6 pb-6">
         {/* Chests — bronze/silver spend gems for a random coins/gems reward; gold spends
             gems for a random card back instead (uniform odds, no rarity). */}
@@ -773,7 +778,7 @@ export default function Shop() {
           // Matches the fixed header's own height (see the spacer div above and Gem Packs'
           // matching scrollMarginTop below) so arriving with ?section=coins lands this
           // section's top just below the header instead of underneath it.
-          style={{ scrollMarginTop: "calc(env(safe-area-inset-top) + 88px + 16px)" }}
+          style={{ scrollMarginTop: "calc(88px + 16px)" }}
         >
           {/* Section title sits in its own bordered bar, full width of the panel and
               overlapping the grid's top edge (border style from the Friends row on the
@@ -818,7 +823,7 @@ export default function Shop() {
           // Matches the fixed header's own height (see the spacer div above) so a scrollIntoView
           // from the insufficient-gems handlers above lands this section's top just below the
           // header instead of underneath it.
-          style={{ scrollMarginTop: "calc(env(safe-area-inset-top) + 88px + 16px)" }}
+          style={{ scrollMarginTop: "calc(88px + 16px)" }}
         >
           <div className="relative rounded-[20px] pt-14 pb-4 px-2">
             <div className="absolute -top-3 left-2 right-2 bg-black border-2 border-white/15 rounded-[18px] py-4 text-center">
