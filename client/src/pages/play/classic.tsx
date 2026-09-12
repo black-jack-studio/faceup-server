@@ -915,10 +915,16 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             )}
           </AnimatePresence>
           {/* Manual mode's own spot for this same bar (Anatole, 2026-09-12) — its original
-              home, before the auto-bet-only handoff above existed. isBetting is essentially
-              never true during auto-bet (see isAutoRebetting), so in practice this and the
-              handoff above don't compete for the same moment. */}
-          {isBetting && (displayedStreak > 0 || streakCelebrationBonus != null) && (
+              home, before the auto-bet-only handoff above existed. Explicitly !autoBetEnabled,
+              not just relying on isBetting staying false during auto-bet (via isAutoRebetting):
+              handlePlaceBet's own finally clears isAutoRebetting whether its startGame call
+              succeeded OR failed, but only the success path also gets gameState off "betting"
+              first (via syncServerState) — a failed or merely slow auto-rebet (Render's free
+              tier is a known slow-to-wake host, see the project's own notes) left gameState
+              genuinely stuck on "betting" for a moment with isAutoRebetting already false, i.e.
+              isBetting real and true, popping this bar on briefly with no wheel in sight
+              (Anatole, 2026-09-12: "ça réapparaît, puis ça redisparaît... que en mode auto"). */}
+          {isBetting && !autoBetEnabled && (displayedStreak > 0 || streakCelebrationBonus != null) && (
             <WinStreakBar
               streak={displayedStreak}
               celebrationBonus={streakCelebrationBonus}
