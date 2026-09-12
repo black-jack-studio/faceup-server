@@ -27,9 +27,13 @@ interface UserChallenge {
 interface ChallengesProps {
   // Skips each progress bar's own fill-in-from-0 animation — see home.tsx's useEnteredOnce.
   skipEntrance?: boolean;
+  // Fires right after a claim actually lands — home.tsx uses this to fly coins from the
+  // claimed card up to its own header balance (see the claim button's onClick below for what
+  // "the card" means here). Not fired on error.
+  onClaimed?: (cardEl: HTMLElement | null, reward: number) => void;
 }
 
-export default function Challenges({ skipEntrance }: ChallengesProps) {
+export default function Challenges({ skipEntrance, onClaimed }: ChallengesProps) {
   const { t } = useTranslation("challenges");
   const { data: userChallenges = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["/api/challenges/user"],
@@ -44,15 +48,15 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
   const [locallyClaimedIds, setLocallyClaimedIds] = useState<Set<string>>(new Set());
 
   const claimMutation = useMutation({
-    mutationFn: async (userChallengeId: string) => {
-      const response = await apiRequest('POST', `/api/challenges/${userChallengeId}/claim`);
+    mutationFn: async (variables: { id: string; reward: number; cardEl: HTMLElement | null }) => {
+      const response = await apiRequest('POST', `/api/challenges/${variables.id}/claim`);
       const data = await response.json();
       if (!response.ok || !data.success) {
         throw new Error(data.error || data.message || "Failed to claim reward");
       }
       return data;
     },
-    onSuccess: (_data, userChallengeId) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
@@ -60,7 +64,8 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
       // loadUserCoins() alone wouldn't refresh the XP bar/level ring.
       useUserStore.getState().loadUser();
 
-      setLocallyClaimedIds((prev) => new Set(prev).add(userChallengeId));
+      setLocallyClaimedIds((prev) => new Set(prev).add(variables.id));
+      onClaimed?.(variables.cardEl, variables.reward);
     },
     onError: (error: any) => {
       toast({ message: t("couldntClaim") });
@@ -227,8 +232,18 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       whileTap={{ scale: 0.94 }}
-                      onClick={() => claimMutation.mutate(userChallenge.id)}
-                      disabled={claimMutation.isPending && claimMutation.variables === userChallenge.id}
+                      // parentElement: the button is itself the absolute-inset-0 overlay over
+                      // the whole card (see the wrapping "relative" div right above) — its
+                      // parent is that whole block, exactly what should look like it's the
+                      // source of the coins about to fly out of it.
+                      onClick={(e) =>
+                        claimMutation.mutate({
+                          id: userChallenge.id,
+                          reward: userChallenge.challenge.reward,
+                          cardEl: e.currentTarget.parentElement,
+                        })
+                      }
+                      disabled={claimMutation.isPending && claimMutation.variables?.id === userChallenge.id}
                       className="absolute inset-0 flex items-center justify-center gap-3"
                       data-testid={`button-claim-challenge-${index}`}
                     >

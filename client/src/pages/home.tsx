@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { triggerHapticTick } from "@/lib/haptics";
@@ -31,8 +31,10 @@ import Leaderboard from "@/pages/leaderboard";
 import NotificationDot from "@/components/NotificationDot";
 import Flame from "@/icons/Flame";
 import { useEnteredOnce } from "@/hooks/use-entered-once";
-import { formatFullNumber } from "@/lib/formatUtils";
 import { trackOnboardingSkipped } from "@/lib/analytics";
+import CoinBurst from "@/components/game/play/CoinBurst";
+import CountingBalance from "@/components/game/CountingBalance";
+import { COIN_STAGGER, COIN_FLIGHT_DURATION } from "@/lib/coinFlightTiming";
 
 export default function Home() {
   const user = useUserStore((state) => state.user);
@@ -74,6 +76,35 @@ export default function Home() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Coins-flying-into-the-balance celebration for a claimed challenge (Anatole, 2026-09-13:
+  // "comme en game" — the same CoinBurst/CountingBalance combo classic.tsx uses for a win).
+  // homeRootRef is CoinBurst's own required position:relative ancestor (see its own props);
+  // coinsHeaderRef is where the coins fly TO (the fixed header balance, not CoinsHero's
+  // scroll-revealed one — "en haut de l'écran" is specifically the pinned one). claimSourceRef
+  // holds whichever card's own DOM node was just claimed (see challenges.tsx's onClaimed) —
+  // a plain ref, not state, since CoinBurst only ever reads it at the instant `active` flips
+  // true and nothing here needs a re-render when it's set.
+  const homeRootRef = useRef<HTMLDivElement>(null);
+  const coinsHeaderRef = useRef<HTMLSpanElement>(null);
+  const claimSourceRef = useRef<HTMLElement | null>(null);
+  // A fixed, generous count regardless of the reward's own size — unlike a hand's win, there's
+  // no "table max bet" to scale against here, and a couple of coins for a small reward would
+  // read as sparse ("je veux pas qu'il y ait deux coins" — Anatole, 2026-09-13) rather than the
+  // same full celebration every time.
+  const CHALLENGE_CLAIM_COIN_COUNT = 10;
+  const [claimCoinAnim, setClaimCoinAnim] = useState<{ from: number; to: number } | null>(null);
+  const handleChallengeClaimed = (cardEl: HTMLElement | null, reward: number) => {
+    if (!cardEl) return;
+    claimSourceRef.current = cardEl;
+    const from = user?.coins ?? 0;
+    setClaimCoinAnim({ from, to: from + reward });
+    // Same per-coin stagger/flight duration CoinBurst always uses (see coinFlightTiming) —
+    // "je veux pas que les coins y partent trop vite" — reusing it rather than a guessed
+    // number is what actually keeps this identical to the game's own version, not just similar.
+    const totalMs = (CHALLENGE_CLAIM_COIN_COUNT - 1) * COIN_STAGGER * 1000 + COIN_FLIGHT_DURATION * 1000 + 250;
+    setTimeout(() => setClaimCoinAnim(null), totalMs);
+  };
 
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [showCreateGame, setShowCreateGame] = useState(false);
@@ -250,7 +281,7 @@ export default function Home() {
     (hasUnclaimedFreeTier || hasUnclaimedPremiumTier);
 
   return (
-    <div className="min-h-screen text-white overflow-hidden" style={{ backgroundColor: '#000000' }}>
+    <div ref={homeRootRef} className="relative min-h-screen text-white overflow-hidden" style={{ backgroundColor: '#000000' }}>
       {/* Header with level/gems and XP ring — pinned in place while the page scrolls
           underneath it; the balance crossfades in here as CoinsHero's own number fades out. */}
       {/* Fixed elements ignore body's own safe-area padding-top (see index.css), so unlike
@@ -276,8 +307,19 @@ export default function Home() {
             <NotificationDot show={!!streakStatus?.claimableReward} className="-top-1 -right-1" />
           </motion.button>
 
-          <div className="text-3xl font-light text-white" style={{ opacity: headerBalanceOpacity }}>
-            {formatFullNumber(user?.coins ?? 0)}
+          <div
+            className="text-3xl font-light"
+            style={{ opacity: headerBalanceOpacity, color: claimCoinAnim ? "#34d399" : "#ffffff" }}
+          >
+            <span ref={coinsHeaderRef} data-testid="text-home-header-balance">
+              <CountingBalance
+                from={claimCoinAnim?.from ?? (user?.coins ?? 0)}
+                to={claimCoinAnim?.to ?? (user?.coins ?? 0)}
+                active={!!claimCoinAnim}
+                impactCount={claimCoinAnim ? CHALLENGE_CLAIM_COIN_COUNT : undefined}
+                showSign={false}
+              />
+            </span>
           </div>
 
           <div className="flex items-center">
@@ -322,8 +364,16 @@ export default function Home() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
       >
-        <Challenges skipEntrance={skipEntrance} />
+        <Challenges skipEntrance={skipEntrance} onClaimed={handleChallengeClaimed} />
       </motion.section>
+
+      <CoinBurst
+        active={!!claimCoinAnim}
+        sourceRef={claimSourceRef}
+        targetRef={coinsHeaderRef}
+        containerRef={homeRootRef}
+        count={CHALLENGE_CLAIM_COIN_COUNT}
+      />
 
       <DailyStreakPopup open={showStreakPopup} onClose={() => setShowStreakPopup(false)} />
 
