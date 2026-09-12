@@ -99,14 +99,29 @@ interface HandCardsProps {
 // with PlayingCard's own sizeMap (client/src/components/PlayingCard.tsx).
 const CARD_WIDTH: Record<CardSize, number> = { xs: 40, sm: 80, friend: 96, md: 96, lg: 120 };
 
-// Cards always fan with the same constant overlap, from the 2nd card on — not just once a
-// hand gets too wide to fit. The step (distance between each card's left edge) is a fixed
-// fraction of the card's own width. At "sm" the suit icon alone runs from a 12px inset out to
-// 44px (see PlayingCard's CardFace), so anything tighter than ~0.55 clips it — 0.65 leaves
-// clear headroom for that plus two-digit ranks ("10").
+// Cards fan with a comfortable overlap while a hand is short. At "sm" the rank/suit corner
+// alone runs from a 12px inset out to 44px (see PlayingCard's CardFace), so anything tighter
+// than 0.55x the card's own width clips it — the size presets scale their rank font together
+// with their width closely enough (~0.39-0.4x across xs/sm/friend/md/lg) that this same ratio
+// is a safe floor for all of them, not just sm. 0.65 leaves clear headroom above that floor
+// for two-digit ranks ("10") once there's room to.
 const OVERLAP_RATIO = 0.65;
-function computeCardStep(cardWidth: number) {
-  return cardWidth * OVERLAP_RATIO;
+const MIN_OVERLAP_RATIO = 0.55;
+// A hand this wide, at any card size, still fits the narrowest phone this app supports (see
+// px-6 in the wrapper below) with room to spare — the budget computeCardStep folds a long
+// hand into, by overlapping the cards more, instead of Classic's old rule of shrinking every
+// card down to "xs" from the 6th card on (which is what used to make a 6+ card hand look
+// shriveled — Anatole, 2026-09-13). Cards always render at their normal size now; only the
+// overlap between them changes.
+const MAX_ROW_WIDTH = 320;
+
+function computeCardStep(cardWidth: number, cardCount: number) {
+  const comfortableStep = cardWidth * OVERLAP_RATIO;
+  if (cardCount <= 1) return comfortableStep;
+  const naturalWidth = cardWidth + (cardCount - 1) * comfortableStep;
+  if (naturalWidth <= MAX_ROW_WIDTH) return comfortableStep;
+  const neededStep = (MAX_ROW_WIDTH - cardWidth) / (cardCount - 1);
+  return Math.max(cardWidth * MIN_OVERLAP_RATIO, neededStep);
 }
 
 export default function HandCards({
@@ -229,20 +244,23 @@ export default function HandCards({
   }, [isDealer, onDealerHandSettled, cards.length, faceDownIndices.length, revealedCount]);
 
   // PlayingCard sizes width/height via an inline style keyed off `size`, which always wins
-  // over any width/height className passed alongside it — so the card shrinks as the hand
-  // grows only if we pick a smaller `size`, not by tweaking classNames here. A caller can pin
-  // this to a fixed size instead (cardSizeOverride) when it has its own layout reasons to,
-  // rather than Classic's own "shrink once the hand gets long" rule.
+  // over any width/height className passed alongside it. Always the same size regardless of
+  // hand length now — a long hand fits by overlapping more (see computeCardStep above), not by
+  // shrinking every card down to "xs" the way this used to work from the 6th card on. A caller
+  // can still pin this to its own fixed size (cardSizeOverride) for its own layout reasons.
   //
   // The player's own hand reads one size tier bigger than the dealer's ("friend", 98px, vs.
-  // "sm", 80px) whenever there's room — the player is the one actually making decisions here,
-  // so their cards are the visual lead, the dealer's a supporting reference. Still falls back
-  // to "xs" once the hand gets long (a split, several hits) exactly like the dealer does, so a
-  // long hand never overflows the screen width just because it started out bigger.
-  const cardSize: CardSize =
-    cardSizeOverride ?? (cards.length >= 6 ? "xs" : variant === "player" ? "friend" : "sm");
+  // "sm", 80px) — the player is the one actually making decisions here, so their cards are the
+  // visual lead, the dealer's a supporting reference.
+  const cardSize: CardSize = cardSizeOverride ?? (variant === "player" ? "friend" : "sm");
   const cardWidth = CARD_WIDTH[cardSize];
-  const step = computeCardStep(cardWidth);
+  // visibleCards.length, not cards.length: the dealer's row grows one mounted card at a time
+  // (see dealerMountedCount above) and already re-flows to its new width via this row's own
+  // `layout` animation as each one lands — keying the overlap off the eventual final count
+  // instead would space out however few cards are mounted right now as if the rest were
+  // already there, i.e. too far apart, rather than starting comfortable and only tightening up
+  // as the hand actually grows.
+  const step = computeCardStep(cardWidth, visibleCards.length);
 
   // Same choreography as the Play with Friends table (friends-table-view.tsx): a card falls
   // in (this wrapper's job), then flips itself face-up a beat later (card.tsx's own job, via
