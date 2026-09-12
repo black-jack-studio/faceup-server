@@ -711,6 +711,15 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   const streakCoinBurstMs = streakIntensity
     ? Math.ceil((Math.max(streakIntensity.coinCount, 1) - 1) * COIN_STAGGER * 1000 + COIN_FLIGHT_DURATION * 1000)
     : 0;
+  // How long the celebration actually needs once the bar mounts with one — the longer of its
+  // own minimum text-hold (CELEBRATION_DURATION_MS) and its coin burst actually finishing. Both
+  // the reset effect below (which clears streakCelebrationBonus, making the bar disappear) and
+  // the auto-dismiss effect further down wait on this exact same value, so the bar vanishing and
+  // everything else resuming land at the same instant instead of two independently-guessed ones
+  // (Anatole, 2026-09-13: "dès que la barre de streak elle disparaît, tout recommence" — used to
+  // be a dead stretch in between, since WinStreakBar cleared itself on its own fixed schedule
+  // while the auto-dismiss timer ran on a separate, deliberately-longer one).
+  const streakCelebrationTotalMs = Math.max(CELEBRATION_DURATION_MS, streakCoinBurstMs);
   // When this hand also completed a streak bonus, the resultRef slot doesn't hand over to the
   // streak bar (and its own CoinBurst just below) until the win amount's own burst has actually
   // finished flying — they share the same source/target, so overlapping read as one cluttered
@@ -745,6 +754,19 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     };
   }, [showResult, streakHandoffDelayMs]);
 
+  // Clears the celebration itself (see streakCelebrationTotalMs's own comment above) — replaces
+  // WinStreakBar's old internal onCelebrationDone timer, which fired on its own fixed schedule
+  // with no idea whether the coin burst it shares the screen with had actually finished. Keyed
+  // on showStreakInResultSlot, not just streakCelebrationBonus itself: the bonus is set at the
+  // reveal instant (see revealResultRef), well before the bar (and its celebration) actually
+  // mounts — starting this countdown then, instead of once the bar is genuinely showing it,
+  // would clear it too early, possibly before it was ever even seen.
+  useEffect(() => {
+    if (!showStreakInResultSlot || streakCelebrationBonus == null) return;
+    const timer = setTimeout(() => setStreakCelebrationBonus(null), streakCelebrationTotalMs);
+    return () => clearTimeout(timer);
+  }, [showStreakInResultSlot, streakCelebrationBonus, streakCelebrationTotalMs]);
+
   // EXPERIMENTAL, see AUTO_DISMISS_MS's own comment above — replaces the old requirement to tap
   // the result away by hand, in manual play now too (Anatole, 2026-09-12 — this started
   // auto-bet-only: "je veux que ce soit comme en mode auto ... pas besoin d'appuyer n'importe
@@ -762,18 +784,16 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   useEffect(() => {
     if (!showResult || isDoubling) return;
     const baseDelay = canOfferDouble ? AUTO_DISMISS_MS : AUTO_DISMISS_QUICK_MS;
-    // A streak bonus needs its own celebration (WinStreakBar's fill+text) and coin burst to
-    // actually finish playing out before this fires, on top of however long it took to even
-    // reach the streak bar in the first place (streakHandoffDelayMs, already pushed out to clear
-    // the win amount's own coin burst — see its own comment) — celebration and coin burst run
-    // concurrently once the bar mounts, so this only needs the longer of the two, not both
-    // summed. Otherwise identical to before.
+    // Timed to land at the exact same instant the reset effect above clears
+    // streakCelebrationBonus (streakHandoffDelayMs + streakCelebrationTotalMs, from reveal) —
+    // not a moment later, so there's no dead stretch between the bar disappearing and the cards
+    // resuming (see streakCelebrationTotalMs's own comment for the whole story).
     const delay = streakCelebrationBonus == null
       ? baseDelay
-      : Math.max(baseDelay, streakHandoffDelayMs + Math.max(CELEBRATION_DURATION_MS, streakCoinBurstMs) + 300);
+      : Math.max(baseDelay, streakHandoffDelayMs + streakCelebrationTotalMs);
     const timer = setTimeout(() => handleDismissResultRef.current(), delay);
     return () => clearTimeout(timer);
-  }, [showResult, isDoubling, canOfferDouble, streakCelebrationBonus, streakHandoffDelayMs, streakCoinBurstMs]);
+  }, [showResult, isDoubling, canOfferDouble, streakCelebrationBonus, streakHandoffDelayMs, streakCelebrationTotalMs]);
 
   const { data: doubleRewardStatus, refetch: refetchDoubleRewardStatus } = useQuery({
     queryKey: ["/api/game/double-reward/status"],
@@ -1011,7 +1031,6 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                 <WinStreakBar
                   streak={displayedStreak}
                   celebrationBonus={streakCelebrationBonus}
-                  onCelebrationDone={() => setStreakCelebrationBonus(null)}
                 />
               </motion.div>
             )}

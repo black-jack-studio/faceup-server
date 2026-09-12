@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import Flame from "@/icons/Flame";
@@ -9,9 +8,13 @@ import { formatFullNumber } from "@/lib/formatUtils";
 // actually sits at/above it in normal display — see celebrationBonus below for the one moment
 // that completion is shown at all.
 const STREAK_BONUS_THRESHOLD = 3;
-// How long the "you win X bonus" celebration holds before handing off to onCelebrationDone.
-// Exported so classic.tsx can size its own auto-dismiss delay to actually cover it (see that
-// effect's own comment) rather than duplicating the number.
+// The minimum time the "you win X bonus" celebration text stays up for. Exported so classic.tsx
+// can clear celebrationBonus itself, timed to whichever is longer between this and the
+// celebration's own coin-flight burst (see classic.tsx's streakCelebrationTotalMs) — this used
+// to be a fixed internal timer here calling an onCelebrationDone prop regardless of how long
+// that burst actually took, which could clear the bar (and hand dismissal off to a second,
+// independently-guessed auto-dismiss timer) well before the coins landed, leaving a dead stretch
+// in between (Anatole, 2026-09-13: "dès que la barre de streak elle disparaît, tout recommence").
 export const CELEBRATION_DURATION_MS = 1800;
 
 interface WinStreakBarProps {
@@ -20,10 +23,9 @@ interface WinStreakBarProps {
   // server has already reset `streak` back to 0 (see applyClassicStreakBonus's own comment), so
   // without this the bar would just vanish instead of ever showing the win that triggered it.
   // While set, the bar holds at its full/maxed state with a "you win X bonus" celebration in
-  // place of the usual countdown text. The caller owns clearing it (via onCelebrationDone) once
-  // its moment is over — this component only asks for that once, after CELEBRATION_DURATION_MS.
+  // place of the usual countdown text. classic.tsx owns clearing it (see CELEBRATION_DURATION_MS
+  // above) — this component just renders whatever it's given for as long as it's given it.
   celebrationBonus?: number | null;
-  onCelebrationDone?: () => void;
 }
 
 // Horizontal fill bar in a pill, inline (not absolutely positioned) — sits just above the
@@ -31,16 +33,10 @@ interface WinStreakBarProps {
 // Anatole, 2026-09-12 — previously lived in the betting screen's own result slot instead).
 // Mount/unmount and its fade in/out are entirely the caller's responsibility — this component
 // just renders the pill itself for whatever streak (and celebration) it's given.
-export default function WinStreakBar({ streak, celebrationBonus, onCelebrationDone }: WinStreakBarProps) {
+export default function WinStreakBar({ streak, celebrationBonus }: WinStreakBarProps) {
   const { t } = useTranslation("gameplay");
   const celebrating = celebrationBonus != null;
   const fillPercent = celebrating ? 100 : Math.min(100, (streak / STREAK_BONUS_THRESHOLD) * 100);
-
-  useEffect(() => {
-    if (!celebrating) return;
-    const timer = setTimeout(() => onCelebrationDone?.(), CELEBRATION_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [celebrating, onCelebrationDone]);
 
   return (
     <div className="flex flex-col items-center gap-1.5">
