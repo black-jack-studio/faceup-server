@@ -1,5 +1,5 @@
 {
-  "classic": { "title": "Classic 21", "subtitle": "Traditional blackjack game" },
+  "classic": { "title": "Garage", "subtitle": "Bets from 1 to 500" },
   "friends": { "title": "Play with Friends", "subtitle": "Up to 3 players at the table" },
   "comingSoon": { "title": "Coming Soon", "subtitle": "A new mode is on its way" }
 }

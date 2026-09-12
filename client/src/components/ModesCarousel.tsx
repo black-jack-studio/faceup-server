@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useGameStore } from "@/store/game-store";
 import ModeCard from "./ModeCard";
-import spadeImage from '@assets/spade_suit_3d_1757354865461.png';
+import houseImage from '@assets/house_3d.png';
 import calendarImage from '@assets/calendar_3d_1787179981404.png';
 import bicepsImage from '@assets/flexed_biceps_3d_default.png';
 
@@ -15,7 +15,7 @@ const modeData = [
     mode: "classic" as const,
     titleKey: "classic.title",
     subtitleKey: "classic.subtitle",
-    icon: spadeImage,
+    icon: houseImage,
     gradient: "bg-gradient-to-br from-green-200 via-blue-100 to-gray-100",
   },
   {
