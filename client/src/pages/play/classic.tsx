@@ -1307,6 +1307,23 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
         count={winIntensity.coinCount}
       />
 
+      {/* Same coin-flight celebration as the win amount's own burst just above, replayed for
+          the win streak's bonus specifically (Anatole, 2026-09-13: "je gagne 5 coins... j'ai
+          l'animation... je veux que ce soit la même chose" for the 3-win streak bonus too) —
+          same sourceRef (the streak bar mounts in this exact slot, see resultRef below) and
+          targetRef, own intensity scaled to the bonus amount rather than the hand's own win.
+          active only goes true once showStreakInResultSlot actually has the bar mounted with a
+          celebration to show, not the instant the bonus itself lands (well before the bar's own
+          handoff) — a fresh true here, from false, is what makes CoinBurst's own effect fire a
+          brand new burst rather than never re-triggering after the first one above. */}
+      <CoinBurst
+        active={showResult && showStreakInResultSlot && streakCelebrationBonus != null}
+        sourceRef={resultRef}
+        targetRef={balanceRef}
+        containerRef={tableRootRef}
+        count={getWinIntensity(streakCelebrationBonus ?? 0, ROOM.maxBet).coinCount}
+      />
+
       {/* Same rising bottom sheet every other popup in the app uses (Daily Streak, Player
           Stats, Invite a friend, ...) instead of a centered modal — height="auto" since this
           content is short and fixed-size, same reasoning as Daily Streak's own sheet. */}
