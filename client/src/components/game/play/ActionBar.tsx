@@ -61,9 +61,13 @@ function ActionButton({
   className,
   testId
 }: ActionButtonProps) {
+  // No hover:bg-* here (or on any of these buttons' own custom className below) — this is a
+  // touch-only app, and mobile WebViews apply :hover on tap and only clear it on the NEXT tap
+  // elsewhere, so a button stayed visibly darker than its siblings right after being pressed
+  // (Anatole, 2026-09-12 — first reported as "the Hit button isn't the same color").
   const enabledClasses = variant === "primary"
     ? "bg-[#B5F3C7] text-[#0B0B0F]"
-    : "bg-white/6 text-white hover:bg-white/10";
+    : "bg-white/6 text-white";
 
   return (
     <motion.button
@@ -133,7 +137,7 @@ export default function ActionBar({
           onClick={onHit}
           disabled={!canHit}
           className={cn(
-            "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0",
+            "bg-[#232227] text-white flex-1 min-w-0",
             canSplit && "px-2 text-[13px] truncate"
           )}
           testId="button-hit"
@@ -145,7 +149,7 @@ export default function ActionBar({
           onClick={onStand}
           disabled={!canStand}
           className={cn(
-            "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0",
+            "bg-[#232227] text-white flex-1 min-w-0",
             canSplit && "px-2 text-[13px] truncate"
           )}
           testId="button-stand"
@@ -156,7 +160,7 @@ export default function ActionBar({
         {canSplit && (
           <ActionButton
             onClick={onSplit}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+            className="bg-[#232227] text-white flex-1 min-w-0 px-2 text-[13px] truncate"
             testId="button-split"
           >
             <SplitIcon className="w-[17px] h-[17px] flex-shrink-0" />
@@ -179,7 +183,7 @@ export default function ActionBar({
           onClick={onDouble}
           disabled={!canDouble}
           className={cn(
-            "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0",
+            "bg-[#232227] text-white flex-1 min-w-0",
             !!onSurrender && "px-2 text-[13px] truncate"
           )}
           testId="button-double"
@@ -191,7 +195,7 @@ export default function ActionBar({
           <ActionButton
             onClick={onSurrender}
             disabled={!canSurrender}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+            className="bg-[#232227] text-white flex-1 min-w-0 px-2 text-[13px] truncate"
             testId="button-surrender"
           >
             {t("surrender")}
@@ -207,7 +211,7 @@ export default function ActionBar({
           <ActionButton
             onClick={onSwap}
             disabled={swapDisabled}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
+            className="bg-[#232227] text-white flex-1 min-w-0"
             testId="button-swap"
           >
             {!swapViaAd && <SwapArrows className="w-[17px] h-[17px] flex-shrink-0" />}
