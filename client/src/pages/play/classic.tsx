@@ -870,12 +870,15 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             so the one moment they actually differ (BET tapped, wheel and ActionBar briefly
             dual-mounted mid-crossfade) reads as one deliberate resize instead of a pop.
 
-            showWatchToDouble also claims the taller 172 tier (Anatole, 2026-09-12): the win
-            streak bar now sits above the Watch-to-2X button in that state (see its own block
-            below), needing the same room budget as the bet wheel's text+slider+button stack. */}
+            showWatchToDouble gets its own taller 200px tier (Anatole, 2026-09-12): the win
+            streak bar now sits centered above the Watch-to-2X button in that state (see its own
+            block below) — 200 leaves roughly equal breathing room above and below the bar
+            (~35px each) around its ~74px content and the button's 56px, rather than the 172px
+            betting tier, which was only sized for the bet wheel's own shorter text+slider+button
+            stack and left the bar cramped right against the button. */}
         <div
           className="w-full flex flex-col justify-center relative transition-[height] duration-300 ease-out"
-          style={{ height: isBetting || showWatchToDouble ? 172 : 128 }}
+          style={{ height: isBetting ? 172 : showWatchToDouble ? 200 : 128 }}
         >
           {/* Sequential fade, same reasoning as the header block above (see there and
               isRoundStart's own comment) — this bit of UI (the wheel vs. ActionBar) uses the
@@ -1010,21 +1013,26 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                 // true — exactly the stretch this button exists for), which would otherwise
                 // swallow every tap meant for it. Matches the z-index RoundResultBanner's own
                 // content already uses to clear that same layer.
-                //
-                // items-center + gap-4: the win streak bar (Anatole, 2026-09-12 — moved here
-                // from the betting screen, see its own component for why) now shares this box
-                // with the button, stacked right above it rather than centered on its own.
-                // justify-end still anchors the pair to the real bottom, the same edge the bet
-                // wheel's own button uses in the 172px tier below.
-                className="absolute inset-0 z-30 flex flex-col items-center justify-end gap-4"
+                className="absolute inset-0 z-30 flex flex-col items-center"
               >
-                {(displayedStreak > 0 || streakCelebrationBonus != null) && (
-                  <WinStreakBar
-                    streak={displayedStreak}
-                    celebrationBonus={streakCelebrationBonus}
-                    onCelebrationDone={() => setStreakCelebrationBonus(null)}
-                  />
-                )}
+                {/* flex-1 + centered: the win streak bar (Anatole, 2026-09-12 — moved here from
+                    the betting screen, see its own component for why) sits centered in whatever
+                    room this flex-1 area has above the button, splitting that room evenly
+                    between the deck above and the button below (Anatole, 2026-09-12: a fixed
+                    justify-end gap glued the bar right against the button instead). The button
+                    itself keeps its own fixed spot at the bottom of this box — the same edge
+                    every other button in this box anchors to (bet button, ActionBar) — so it's
+                    the bar moving up into the extra room from the 200px tier above, not the
+                    button moving down, that actually closes the gap. */}
+                <div className="flex-1 w-full flex items-center justify-center">
+                  {(displayedStreak > 0 || streakCelebrationBonus != null) && (
+                    <WinStreakBar
+                      streak={displayedStreak}
+                      celebrationBonus={streakCelebrationBonus}
+                      onCelebrationDone={() => setStreakCelebrationBonus(null)}
+                    />
+                  )}
+                </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
