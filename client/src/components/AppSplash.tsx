@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import "./AppSplash.css";
 
-// Length of the reveal sequence itself (bars assembling through the tagline
-// settling — see AppSplash.css's animation-delay/duration values), i.e. the
-// minimum time the splash stays up even if `ready` flips true instantly, so
-// the animation is never cut short.
-const REVEAL_MS = 1210;
+// Length of the reveal sequence itself — now just the bars assembling, since
+// the wordmark/tagline appear immediately instead of waiting on them (see
+// AppSplash.css's animation-delay/duration values) — i.e. the minimum time
+// the splash stays up even if `ready` flips true instantly, so the
+// animation is never cut short.
+const REVEAL_MS = 800;
 const EXIT_MS = 480;
 // Hard ceiling so a slow or hung session check (e.g. the backend's free-tier
 // cold start) can never leave this full-screen, click-blocking overlay up
