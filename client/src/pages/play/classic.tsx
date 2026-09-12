@@ -559,9 +559,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // actually double, and a gameId to double it against (naturals settle immediately server-
   // side and always carry one, see /api/game/start).
   const canOfferDouble = !!gameId && isWinResult && netResultAmount > 0;
-  // The Watch-to-2X button is actually showing (see its own block below) — also drives the
-  // bottom box's taller height tier, since the win streak bar now shares that box with the
-  // button (Anatole, 2026-09-12).
+  // The Watch-to-2X button is actually showing (see its own block below).
   const showWatchToDouble = showResult && canOfferDouble;
 
   const { data: doubleRewardStatus, refetch: refetchDoubleRewardStatus } = useQuery({
@@ -870,15 +868,18 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             so the one moment they actually differ (BET tapped, wheel and ActionBar briefly
             dual-mounted mid-crossfade) reads as one deliberate resize instead of a pop.
 
-            showWatchToDouble gets its own taller 200px tier (Anatole, 2026-09-12): the win
-            streak bar now sits centered above the Watch-to-2X button in that state (see its own
-            block below) — 200 leaves roughly equal breathing room above and below the bar
-            (~35px each) around its ~74px content and the button's 56px, rather than the 172px
-            betting tier, which was only sized for the bet wheel's own shorter text+slider+button
-            stack and left the bar cramped right against the button. */}
+            showWatchToDouble deliberately does NOT get its own tier here (Anatole, 2026-09-12):
+            this box's height is what the player's cards above it are positioned against (same
+            bottom-anchored flex column), so any change here moves the cards too — fine for the
+            isBetting swap (cards are hidden/placeholder by then), but the watch-to-2x moment
+            shows the just-played hand and its result at the same time, and an earlier attempt at
+            a taller tier for it shoved those real cards up into the result's own "+N XP" text.
+            The win streak bar that now lives in that state instead reaches into the unused
+            16px gap above this box (see its own negative-top overlay below) rather than growing
+            the box itself, so the cards genuinely never move for it. */}
         <div
           className="w-full flex flex-col justify-center relative transition-[height] duration-300 ease-out"
-          style={{ height: isBetting ? 172 : showWatchToDouble ? 200 : 128 }}
+          style={{ height: isBetting ? 172 : 128 }}
         >
           {/* Sequential fade, same reasoning as the header block above (see there and
               isRoundStart's own comment) — this bit of UI (the wheel vs. ActionBar) uses the
@@ -1013,17 +1014,25 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                 // true — exactly the stretch this button exists for), which would otherwise
                 // swallow every tap meant for it. Matches the z-index RoundResultBanner's own
                 // content already uses to clear that same layer.
-                className="absolute inset-0 z-30 flex flex-col items-center"
+                //
+                // -top-4 instead of inset-0 (Anatole, 2026-09-12): reaches 16px above this box's
+                // own top edge to reclaim the gap-4 that's normally just blank space between the
+                // player's cards and this box, giving the streak bar a little real room to sit
+                // in without the box itself growing — growing the box moves the cards too (see
+                // the height comment above), which is exactly what shoved them into the result's
+                // own "+N XP" text the first time this was tried. This 16px is the most it can
+                // safely claim: any more and it starts drawing over the cards themselves rather
+                // than the blank gap above them.
+                className="absolute -top-4 inset-x-0 bottom-0 z-30 flex flex-col items-center"
               >
                 {/* flex-1 + centered: the win streak bar (Anatole, 2026-09-12 — moved here from
                     the betting screen, see its own component for why) sits centered in whatever
-                    room this flex-1 area has above the button, splitting that room evenly
-                    between the deck above and the button below (Anatole, 2026-09-12: a fixed
-                    justify-end gap glued the bar right against the button instead). The button
-                    itself keeps its own fixed spot at the bottom of this box — the same edge
-                    every other button in this box anchors to (bet button, ActionBar) — so it's
-                    the bar moving up into the extra room from the 200px tier above, not the
-                    button moving down, that actually closes the gap. */}
+                    room this flex-1 area has above the button, splitting that room evenly on
+                    both sides instead of a fixed gap gluing it right against the button. The
+                    button itself keeps its own fixed spot at the bottom of this box — the same
+                    edge every other button in this box anchors to (bet button, ActionBar) — so
+                    within this now-144px-tall overlay, it's the bar that moves to make room, not
+                    the button. */}
                 <div className="flex-1 w-full flex items-center justify-center">
                   {(displayedStreak > 0 || streakCelebrationBonus != null) && (
                     <WinStreakBar
