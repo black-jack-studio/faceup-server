@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -302,20 +302,35 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
   // doesn't burst yet -- the player needs to see it fully charged first). Only once every dot
   // is lit does one more tap crack the chest open. Once revealed, the same tap dismisses as
   // before.
+  //
+  // revealed/bursting are read through refs (kept in sync every render, below) rather than the
+  // state values directly, and tapCount is updated through the functional setState form --
+  // spamming taps fires multiple native click events before React has committed the state
+  // update from the previous one, so two handlers in a row would otherwise close over the same
+  // stale tapCount/bursting and the second tap would silently overwrite the first instead of
+  // adding to it.
+  const revealedRef = useRef(revealed);
+  revealedRef.current = revealed;
+  const burstingRef = useRef(bursting);
+  burstingRef.current = bursting;
+
   const handleTap = () => {
-    if (revealed) {
+    if (revealedRef.current) {
       onDismiss();
       return;
     }
-    if (bursting) return;
-    if (tapCount >= theme.tapsRequired) {
-      setBursting(true);
-      if (theme.haptic === "success") triggerHapticImpact(ImpactStyle.Heavy);
-      else triggerHapticImpact(ImpactStyle.Medium);
-      return;
-    }
-    setTapCount(tapCount + 1);
-    triggerHapticTick();
+    if (burstingRef.current) return;
+    setTapCount((prev) => {
+      if (prev >= theme.tapsRequired) {
+        burstingRef.current = true;
+        setBursting(true);
+        if (theme.haptic === "success") triggerHapticImpact(ImpactStyle.Heavy);
+        else triggerHapticImpact(ImpactStyle.Medium);
+        return prev;
+      }
+      triggerHapticTick();
+      return prev + 1;
+    });
   };
 
   // Portaled straight to document.body: the Shop page it's opened from sits inside an
