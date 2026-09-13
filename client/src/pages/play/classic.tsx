@@ -1116,26 +1116,17 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
           </AnimatePresence>
         </div>
 
-        {/* A fixed height per state (bet wheel vs. everything else), not a single constant for
-            both any more — the bet wheel's own natural content (label + amount + 48px slider +
-            button) runs to ~172px, but the ActionBar grid underneath it the rest of a hand's
-            duration only needs ~112px, and keeping the taller 172 permanently left a large dead
-            gap below the actual buttons — and below them, the player's cards too, since this
-            whole block sits above nothing (it's the last child in a bottom-anchored flex column)
-            and had that much more total height to sit on top of (Anatole, 2026-09-11: "tout est
-            trop haut, il y a trop d'espace vide en bas").
-
-            The two heights still don't just snap between each other though — that's what used to
-            cause the exact bug this box's fixed height originally fixed (see git blame): a
-            min-height box growing/shrinking the instant the wheel mounted/unmounted shoved the
-            cards above it a visible beat late instead of them already sitting where they land.
-            The CSS height transition below covers the same ground more cheaply: the box still
-            only ever has one of two heights, but now animates between them instead of snapping,
-            so the one moment they actually differ (BET tapped, wheel and ActionBar briefly
-            dual-mounted mid-crossfade) reads as one deliberate resize instead of a pop. */}
+        {/* Fixed at the same 128px in every state, betting included, so the player's cards
+            (this box's sibling above, in the same bottom-anchored flex column) sit at the exact
+            same height on the betting screen as once the hand actually starts — no more drop
+            when BET is tapped (Anatole, 2026-09-13: "je veux [...] baisses les cartes pour
+            qu'elles soient à la même hauteur [...] exactement au même emplacement que quand on
+            est en game"). The bet wheel's own content (slider + button, no label/amount above it
+            any more — see the wheel branch below) now bottom-aligns via justify-end, same as the
+            ActionBar branch, instead of centering in a taller box. */}
         <div
-          className="w-full flex flex-col justify-center relative transition-[height] duration-300 ease-out"
-          style={{ height: isBetting ? 172 : 128 }}
+          className="w-full flex flex-col justify-center relative"
+          style={{ height: 128 }}
         >
           {/* Sequential fade, same reasoning as the header block above (see there and
               isRoundStart's own comment) — this bit of UI (the wheel vs. ActionBar) uses the
@@ -1179,37 +1170,8 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                 initial={{ opacity: 0, y: 28 }}
                 animate={{ opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } }}
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-                className="absolute inset-0 flex flex-col"
+                className="absolute inset-0 flex flex-col justify-end"
               >
-                {/* flex-1 (not part of the space-y-2 stack below): centers the "YOUR BET" text
-                    in whatever room is actually left above the slider, instead of the old
-                    single justify-center on the whole column — that centered the text+slider+
-                    button as one group in the 172px box, which piled ALL of the fixed box's
-                    slack above the text (since the text/slider/button stack is much shorter
-                    than 172px) and left it sitting almost flush against the slider below, far
-                    from the cards above. This keeps the same true center point regardless of
-                    exact text/slider/button heights. */}
-                <div className="flex-1 flex items-center justify-center">
-                  {!outOfCoins && (
-                    <div className="text-center">
-                      <p className="text-xs text-white/50 uppercase tracking-wide mb-0.5">{t("yourBet")}</p>
-                      <motion.p
-                        className="text-2xl font-light tracking-tight"
-                        key={currentBet}
-                        initial={{ scale: 0.92, opacity: 0.7 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                        data-testid="text-current-bet"
-                      >
-                        {formatFullNumber(currentBet)}
-                      </motion.p>
-                    </div>
-                  )}
-                </div>
-                {/* space-y-2 moved down onto just this pair (was on the whole flex column
-                    above) — the slider and its button still need that same fixed gap between
-                    them, now that the text block above claims its own flex-1 area instead of
-                    sharing this stack. */}
                 <div className="space-y-2">
                   <BetSlider
                     min={ROOM.minBet}
