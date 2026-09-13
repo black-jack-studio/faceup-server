@@ -46,7 +46,7 @@ export interface ChestRewardEmote {
 interface ChestRewardRevealProps {
   chestImage: string;
   // Drives the suspense/reveal's whole visual intensity (taps required to crack it open, glow
-  // color, light rays, confetti density, haptics) -- NOT the won item's own rarity, which stays
+  // color, confetti density, haptics) -- NOT the won item's own rarity, which stays
   // hidden per the rule below. The chest's tier is already known to the player before they open
   // it (they picked/earned that exact chest), so leaning on it here amplifies information they
   // already have instead of leaking anything new.
@@ -66,13 +66,12 @@ interface ChestRewardRevealProps {
 }
 
 // No rarity or item name is ever shown for a won item (card back/avatar/emote) -- just a plain
-// "New X!" caption -- so the glow/rays/confetti below are keyed off the chest's tier (see the
+// "New X!" caption -- so the glow/confetti below are keyed off the chest's tier (see the
 // `tier` prop above) rather than a per-item rarity color.
 interface TierTheme {
   glow: string;
   tapsRequired: number; // taps needed to crack the chest open -- worse chest, fewer taps
   crackColor: string; // bright solid color for the tap-progress orbs (glow above is translucent)
-  rayCount: number; // 0 = no light rays behind the revealed item
   screenShake: boolean; // brief jolt on the whole popup at the reveal cut
   confettiCount: number;
   confettiColors: string[];
@@ -84,7 +83,6 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
     glow: "rgba(180,140,92,0.5)",
     tapsRequired: 2,
     crackColor: "#F0D9AE",
-    rayCount: 0,
     screenShake: false,
     confettiCount: 40,
     confettiColors: ["#C9A171", "#E8C48A", "#8B6B45", "#F0D9AE"],
@@ -94,7 +92,6 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
     glow: "rgba(203,213,225,0.55)",
     tapsRequired: 3,
     crackColor: "#E2E8F0",
-    rayCount: 0,
     screenShake: false,
     confettiCount: 55,
     confettiColors: ["#CBD5E1", "#94A3B8", "#E2E8F0", "#64748B"],
@@ -104,7 +101,6 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
     glow: "rgba(255,196,84,0.65)",
     tapsRequired: 4,
     crackColor: "#FFC454",
-    rayCount: 6,
     screenShake: false,
     confettiCount: 70,
     confettiColors: ["#FFC454", "#facc15", "#f59e0b", "#fde68a"],
@@ -114,7 +110,6 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
     glow: "rgba(168,85,247,0.65)",
     tapsRequired: 5,
     crackColor: "#e9d5ff",
-    rayCount: 9,
     screenShake: false,
     confettiCount: 85,
     confettiColors: ["#a855f7", "#c084fc", "#e9d5ff", "#FFC454"],
@@ -124,7 +119,6 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
     glow: "rgba(250,204,21,0.75)",
     tapsRequired: 6,
     crackColor: "#fff7cc",
-    rayCount: 14,
     screenShake: true,
     confettiCount: 110,
     confettiColors: ["#facc15", "#FFC454", "#f97316", "#fff7cc", "#a855f7"],
@@ -188,41 +182,12 @@ function ConfettiRain({ count, colors }: { count: number; colors: string[] }) {
   );
 }
 
-// Slowly-rotating light rays behind the revealed item, evenly spaced around the center. Pure
-// CSS/motion (no art asset) — count and reach scale with the chest's tier via TIER_THEME.
-function LightRays({ count, color }: { count: number; color: string }) {
-  const rays = useMemo(() => Array.from({ length: count }, (_, i) => (360 / count) * i), [count]);
-  return (
-    <motion.div
-      className="absolute inset-0 -z-20 flex items-center justify-center"
-      animate={{ rotate: 360 }}
-      transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
-    >
-      {rays.map((deg) => (
-        <div
-          key={deg}
-          className="absolute"
-          style={{
-            width: 4,
-            height: "140vmax",
-            background: `linear-gradient(to bottom, ${color}, transparent 55%)`,
-            transform: `rotate(${deg}deg)`,
-            transformOrigin: "center top",
-            top: "50%",
-            opacity: 0.5,
-          }}
-        />
-      ))}
-    </motion.div>
-  );
-}
-
 // One popup used for both the Shop's chest purchases and the Battle Pass's tier claims, so
 // opening a chest always feels the same regardless of where it came from. Three beats: a
 // "crack" tease where the player taps the chest tapsRequired times, each hit punching the
 // chest and drawing a new crack line, a white-flash burst on the last tap, then the actual
 // reveal (resources popping in with a count-up, or -- if an item was won -- a large,
-// deliberately showy flip with a confetti burst, light rays and a tier-colored glow).
+// deliberately showy flip with a confetti burst and a tier-colored glow).
 export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack, avatar, emote, onRevealed, onDismiss }: ChestRewardRevealProps) {
   const { t } = useTranslation("chestRewardReveal");
   const [tapCount, setTapCount] = useState(0);
@@ -480,7 +445,6 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
             >
               <ConfettiRain count={theme.confettiCount} colors={theme.confettiColors} />
               <div className="relative flex flex-col items-center gap-5">
-                {theme.rayCount > 0 && <LightRays count={theme.rayCount} color={theme.glow} />}
                 <motion.div
                   className="absolute inset-0 -z-10 rounded-full blur-3xl"
                   style={{ background: `radial-gradient(circle, ${theme.glow}, transparent 70%)` }}
@@ -541,7 +505,6 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
             >
               <ConfettiRain count={theme.confettiCount} colors={theme.confettiColors} />
               <div className="relative flex flex-col items-center gap-5">
-                {theme.rayCount > 0 && <LightRays count={theme.rayCount} color={theme.glow} />}
                 <motion.div
                   className="absolute inset-0 -z-10 rounded-full blur-3xl"
                   style={{ background: `radial-gradient(circle, ${theme.glow}, transparent 70%)` }}
@@ -577,7 +540,6 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
             >
               <ConfettiRain count={theme.confettiCount} colors={theme.confettiColors} />
               <div className="relative flex flex-col items-center gap-5">
-                {theme.rayCount > 0 && <LightRays count={theme.rayCount} color={theme.glow} />}
                 <motion.div
                   className="absolute inset-0 -z-10 rounded-full blur-3xl"
                   style={{ background: `radial-gradient(circle, ${theme.glow}, transparent 70%)` }}
