@@ -305,14 +305,15 @@ export default function HandCards({
           // event instead of "my move, then the dealer's" — so this holds it back a bit longer
           // than the normal fallDelay + 0.4 formula gives every other card.
           //
-          // 0.9 -> 1.3 (Anatole, 2026-09-13: "j'ai à peine le temps d'appuyer sur le bouton" que
-          // le tour du dealer est déjà terminé, specifically reported on a busting hit). A hit's
-          // own card finishes its own fall+flip at 0.4 (its own revealDelay, see fallDelay below
-          // for why it's 0 on a hit) + 0.5 (the flip itself) = 0.9s — the exact same instant this
-          // used to fire at, so the dealer's card started turning the moment the player's finished
-          // with no beat in between, reading as one simultaneous event rather than two in
-          // sequence. 1.3 leaves ~400ms where the player's own bust is sitting there settled,
-          // nothing else moving yet, before the dealer's own reveal starts.
+          // 0.9 -> 0.9 stayed put, but what it's measured from moved (Anatole, 2026-09-13,
+          // later the same day): a hit's own reveal used to wait a further 0.4s after landing
+          // before flipping (see the isInitialDealSlot branch of revealDelay below) — on top of
+          // the fall + flip themselves, that read as a second, separate delay right when the
+          // player most wants to see the result of their tap. Hit cards now flip the instant
+          // they land (revealDelay 0 in the branch below), finishing their fall+flip at 0.4
+          // (fall) or really 0.5 (the flip itself, which is what actually dominates) instead of
+          // the old 0.9. This dealer beat is recomputed to match: 0.5 (hit's new finish) + 0.4
+          // (the same ~400ms breathing room as before) = 0.9.
           const isDealerHoleCardSlot = isDealer && cardIndex === 1;
           // skipFall collapses fallDelay to 0 for both initial-slot cards (see above). A
           // per-card (cardIndex * 0.08) offset used to sit on top of this, meant to spread the
@@ -328,7 +329,16 @@ export default function HandCards({
           // survives, so the table's two hands still don't hit edge-on in the exact same
           // instant as each other.
           const skipFallStagger = skipFall ? (isDealer ? 0 : 0.04) : 0;
-          const revealDelay = isDealerHoleCardSlot ? 1.3 : fallDelay + (skipFall ? 0.1 + skipFallStagger : 0.4);
+          // A hit (not an initial-deal slot) flips the instant it lands — no extra 0.4s wait on
+          // top of the fall (Anatole, 2026-09-13: hitting felt laggy/buggy because nothing
+          // visibly happened for most of that wait). The initial two-card deal keeps its own
+          // fallDelay + 0.4/skipFall formula unchanged; that pacing is deliberate suspense, not
+          // dead time on the back of a tap.
+          const revealDelay = isDealerHoleCardSlot
+            ? 0.9
+            : isInitialDealSlot
+              ? fallDelay + (skipFall ? 0.1 + skipFallStagger : 0.4)
+              : 0;
           // Round end's mirror of revealDelay — used to ripple by cardIndex * 0.06 for the same
           // "avoid a simultaneous dip" reasoning above, with the same real-world result: a
           // visible lag between a hand's own two cards instead of a subtle ripple. Zero here

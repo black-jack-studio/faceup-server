@@ -711,6 +711,12 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
                   const hideDelay = i * 0.06;
                   const x = i * (FULL_CARD_W - overlap);
+                  // A hit (i >= 2) flips the instant it lands instead of waiting a further 0.4s
+                  // on top of the fall — same fix as Classic solo's HandCards, and for the same
+                  // reason: that extra wait is what actually made Hit/Double feel laggy, since
+                  // the fall alone doesn't show the card's value. The initial two-card deal
+                  // keeps its own cardFallDelay + 0.4 pacing unchanged.
+                  const revealDelay = i < 2 ? cardFallDelay + 0.4 : 0;
                   return (
                     <motion.div
                       key={i}
@@ -737,7 +743,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                         isHidden={forceHidden || isSwapFlipping}
                         size="friend"
                         radius={20}
-                        revealDelay={cardFallDelay + 0.4}
+                        revealDelay={revealDelay}
                         hideDelay={hideDelay}
                         onFlipComplete={() => bumpRevealedCount(displaySlot, i)}
                       />
