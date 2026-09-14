@@ -1198,7 +1198,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                         useOverlayVisibilityStore.getState().reset();
                         navigate("/shop?section=coins");
                       }}
-                      whileTap={{ scale: 0.98 }}
+                      whileTap={{ scale: 0.96 }}
                       className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A]"
                       data-testid="button-go-to-shop"
                     >
@@ -1211,7 +1211,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                       // truthy event object would flip isAutoRebetting on for a manual tap too.
                       onClick={() => handlePlaceBet()}
                       disabled={isPlacingBet || balance < currentBet}
-                      whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.98 } : {}}
+                      whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.96 } : {}}
                       className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
                       data-testid="button-place-bet"
                     >

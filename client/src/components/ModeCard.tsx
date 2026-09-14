@@ -30,7 +30,7 @@ export default function ModeCard({ mode, title, subtitle, icon, gradient, onClic
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
       whileHover={canPlay ? { scale: 1.02, y: -4 } : {}}
-      whileTap={canPlay ? { scale: 0.98 } : {}}
+      whileTap={canPlay ? { scale: 0.96 } : {}}
       onClick={canPlay ? onClick : undefined}
       data-testid={`mode-card-${mode}`}
     >
