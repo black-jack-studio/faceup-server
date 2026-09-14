@@ -1023,17 +1023,25 @@ export default function FriendsTableView({
                 animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
               >
-                {/* forceHidden || isDismissingResult together cover the whole "just dismissed the
-                    result, resetting for the next hand" window (see isDismissingResult's own
-                    comment above for why forceHidden alone left a gap) — the dealer's cards
-                    already left along with the result a moment ago, so there's nothing left to
-                    flip back the way my own/friends' cards do. Rendering renderDealer() here
-                    instead would show its real (still face-up) dealerHand fully again for a beat,
-                    reading as the cards respawning right after they'd just disappeared (Anatole,
-                    2026-09-14: "je veux pas qu'elles respawn... t'as pas besoin de remettre les
-                    cartes"). Plain empty placeholder instead, same footprint renderDealer() itself
-                    uses for "no cards yet". */}
-                {forceHidden || isDismissingResult ? <div className="h-24" /> : renderDealer()}
+                {/* renderDealer() is ALWAYS called here, never conditionally swapped for a
+                    placeholder element the way an earlier version of this did — that swap
+                    unmounted and remounted the actual card elements each time forceHidden/
+                    isDismissingResult toggled, and going through that extra mount cycle is what
+                    left the up-card (always index 0, dealt already face-up) stuck showing its
+                    back forever on the very next hand (Anatole, 2026-09-14) — its own reveal flip
+                    is driven entirely by framer-motion's initial->animate transition on MOUNT
+                    (see card.tsx), so an unwanted extra remount right as forceHidden/
+                    isDismissingResult flip could leave that transition in a state it never
+                    recovers from. Purely visual opacity toggle instead — the cards stay mounted
+                    continuously (their own internal reveal-cascade state, dealerMountedCount/
+                    dealerRevealedCount above, is never disturbed by this), just invisible for the
+                    same "just dismissed, resetting for the next hand" window forceHidden ||
+                    isDismissingResult covers (see isDismissingResult's own comment for why
+                    forceHidden alone left a gap) — there's nothing left to flip back there, unlike
+                    my own/friends' cards, which keep their own separate flip animation. */}
+                <div className={forceHidden || isDismissingResult ? "opacity-0 pointer-events-none" : ""}>
+                  {renderDealer()}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
