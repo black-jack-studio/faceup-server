@@ -4,14 +4,14 @@
 // "Interface Sounds" packs (client/public/sounds/LICENSE-kenney-*.txt).
 
 const SOUND_FILES = {
-  cardDeal: "/sounds/card-deal.ogg",
-  cardFlip: "/sounds/card-flip.ogg",
+  cardDeal: "/sounds/card-deal.wav",
+  cardFlip: "/sounds/card-flip.wav",
   chipBet: "/sounds/chip-bet.ogg",
   shuffle: "/sounds/shuffle.ogg",
-  buttonClick: "/sounds/button-click.ogg",
-  win: "/sounds/win.ogg",
-  lose: "/sounds/lose.ogg",
-  push: "/sounds/push.ogg",
+  buttonClick: "/sounds/button-click.mp3",
+  win: "/sounds/win.wav",
+  lose: "/sounds/lose.mp3",
+  push: "/sounds/push.mp3",
   chestOpen: "/sounds/chest-open.ogg",
 } as const;
 
