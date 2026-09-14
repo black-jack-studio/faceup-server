@@ -86,6 +86,17 @@ const HIDE_FLIP_MS = 500 + 100;
 // was still mid-flip, ahead of the "only once everything's actually revealed" this gate exists
 // for.
 const REVEAL_FLIP_MS = 150 + 400 + 500 + 100;
+// HandCards' own dealerHoleCardDelay default (0.15s) assumes nothing else is animating when the
+// dealer's hole card starts its reveal — true for Stand, where the player's hand doesn't change.
+// A hit that busts, or a double, deals the player a fresh card in the very same store update that
+// also reveals the dealer's hand, so that card is still mid-fall/flip in the player's own
+// (sibling) HandCards at the exact instant the dealer's would start under the default delay —
+// Anatole, 2026-09-14: "ma carte, elle a à peine fini d'atterrir... que les cartes du dealer
+// commencent déjà". Used instead of the default whenever lastActionDrewCardRef is true (see
+// handlePlayerAction) — long enough for that fresh card to actually finish (0.5s, its flip
+// duration, since a hit flips the instant it lands) plus the same 0.15s "my move, then the
+// dealer's" beat the default itself is built from.
+const DEALER_REVEAL_DELAY_AFTER_DRAW = 0.5 + 0.15;
 // How long whatever's currently in the result slot (RoundResultBanner, or — once the handoff's
 // happened — the win streak bar) takes to actually fade out once dismissed, before the cards'
 // own flip-back starts — matches both of their own exit transitions. Used to fire in the same
@@ -420,8 +431,17 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     }
   };
 
+  // Whether the player's MOST RECENT action also dealt them a fresh card — read by the dealer's
+  // HandCards below (dealerHoleCardDelay) to tell a bust-via-hit/double apart from a Stand. Only
+  // ever reset by the next action actually taken, so it stays correct through however many hits
+  // happen before the round finally ends: it always reflects the one action that ended it,
+  // whichever that turns out to be. See DEALER_REVEAL_DELAY_AFTER_DRAW's own comment for why this
+  // matters.
+  const lastActionDrewCardRef = useRef(false);
+
   const handlePlayerAction = (action: "hit" | "stand" | "double" | "split") => {
     if (isProcessingAction) return;
+    lastActionDrewCardRef.current = action === "hit" || action === "double";
     if (action === "hit") hit();
     if (action === "stand") stand();
     if (action === "double") double();
@@ -979,6 +999,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             showPositionedTotal
             total={dealerTotal}
             onDealerHandSettled={handleDealerHandSettled}
+            dealerHoleCardDelay={lastActionDrewCardRef.current ? DEALER_REVEAL_DELAY_AFTER_DRAW : undefined}
             skipInitialFall
             placeholderCount={2}
           />

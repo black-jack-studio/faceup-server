@@ -93,6 +93,14 @@ interface HandCardsProps {
   // cluttered event instead of "score goes away, then the cards move" (see classic.tsx's
   // `revealSplit`). Undefined/false for every other caller.
   splitting?: boolean;
+  // Dealer only: how long the hole card waits before it starts its own reveal flip (see
+  // isDealerHoleCardSlot below) — defaults to the plain "my move, then the dealer's" beat, but a
+  // caller whose own last action also dealt the player a fresh card (a hit that busts, a double)
+  // needs to pass a bigger one, since that fresh card is still mid-fall/flip in a sibling
+  // HandCards at the exact same instant this one mounts — without the extra wait, the dealer's
+  // cards visibly started moving before the player's own card had even landed (Anatole,
+  // 2026-09-14, speed audit follow-up).
+  dealerHoleCardDelay?: number;
 }
 
 // Actual rendered width (px) of each CardSize this component ever picks — kept in sync
@@ -142,6 +150,7 @@ export default function HandCards({
   forceHidden = false,
   cardLayoutIdPrefix,
   splitting = false,
+  dealerHoleCardDelay = 0.15,
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
 
@@ -305,14 +314,15 @@ export default function HandCards({
           // event instead of "my move, then the dealer's" — so this holds it back a bit longer
           // than the normal fallDelay + 0.4 formula gives every other card.
           //
-          // 0.6 -> 0.15 (speed audit, 2026-09-14): a hit flips the instant it lands (see
+          // 0.6 -> 0.15 default (speed audit, 2026-09-14): a hit flips the instant it lands (see
           // revealDelay below) — this fixed pause was the one card in the whole game still
           // making the player wait through dead air before anything moved, which is exactly what
           // stood out as "off" next to everything else's snappier, instant-on-landing feel. 0.15
           // reuses the same beat already used to separate the two initial-deal cards (fallDelay
           // above, cardIndex * 0.15) instead of a bespoke number — still a distinct "my move,
           // then the dealer's" beat, just built from the same vocabulary as the rest of the
-          // table instead of its own one-off pause.
+          // table instead of its own one-off pause. Only a *default*, though — see
+          // dealerHoleCardDelay's own comment above for the case a caller needs longer.
           const isDealerHoleCardSlot = isDealer && cardIndex === 1;
           // skipFall collapses fallDelay to 0 for both initial-slot cards (see above). A
           // per-card (cardIndex * 0.08) offset used to sit on top of this, meant to spread the
@@ -334,7 +344,7 @@ export default function HandCards({
           // fallDelay + 0.4/skipFall formula unchanged; that pacing is deliberate suspense, not
           // dead time on the back of a tap.
           const revealDelay = isDealerHoleCardSlot
-            ? 0.15
+            ? dealerHoleCardDelay
             : isInitialDealSlot
               ? fallDelay + (skipFall ? 0.1 + skipFallStagger : 0.4)
               : 0;
