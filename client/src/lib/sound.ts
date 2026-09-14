@@ -33,18 +33,28 @@ function getAudio(name: SoundName): HTMLAudioElement {
 
 // iOS WebView (and most mobile browsers) refuse the very first Audio.play() unless it's
 // called synchronously inside a user gesture. The game's own sounds (dealt cards, dealer
-// turns) fire well outside any tap, so every sound is preloaded — and silently played/paused
-// once — on the first tap anywhere in the app, which satisfies that gesture requirement and
-// unlocks playback for every later programmatic call this session.
+// turns) fire well outside any tap, so every sound is preloaded — and played/paused once —
+// on the first tap anywhere in the app, which satisfies that gesture requirement and unlocks
+// playback for every later programmatic call this session. Muted during this one unlock play:
+// `.play()` starts real audible output immediately, and `.pause()` only lands once its promise
+// resolves (a WebView tick or two later), so leaving it unmuted meant every sound briefly
+// played all at once, audibly, on the very first tap.
 let unlocked = false;
 export function unlockAudio() {
   if (unlocked) return;
   unlocked = true;
   Object.keys(SOUND_FILES).forEach((name) => {
     const el = getAudio(name as SoundName);
+    el.muted = true;
     el.play()
-      .then(() => el.pause())
-      .catch(() => {});
+      .then(() => {
+        el.pause();
+        el.currentTime = 0;
+        el.muted = false;
+      })
+      .catch(() => {
+        el.muted = false;
+      });
   });
 }
 
