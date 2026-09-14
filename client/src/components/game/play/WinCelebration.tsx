@@ -105,18 +105,25 @@ export default function WinCelebration({ active, isBlackjack, count }: WinCelebr
           key={p.id}
           className="absolute top-0 rounded-sm"
           style={{ left: `${p.left}%`, backgroundColor: p.color, width: p.width, height: p.height }}
+          // Opacity only ever fades IN, at the very start — the piece then stays fully opaque
+          // for its whole fall and leaves the screen by going past the bottom edge (clipped by
+          // this layer's own overflow-hidden, y: "110vh" is well past any real viewport height),
+          // never by fading out. It used to fade out over its last 25% too, which read as
+          // confetti dissolving mid-air instead of actually falling all the way down and off
+          // (Stanislas, 2026-09-14, after watching the recorded result: "je veux juste qu'ils
+          // descendent jusqu'en bas... sans jamais devenir transparent").
           initial={{ y: "-8vh", x: 0, opacity: 0, rotate: 0 }}
           animate={{
             y: "110vh",
             x: p.drift,
-            opacity: [0, 1, 1, 0],
+            opacity: [0, 1, 1],
             rotate: p.rotate,
           }}
           transition={{
             duration: p.duration,
             delay: p.delay,
             ease: "linear",
-            opacity: { duration: p.duration, times: [0, 0.08, 0.75, 1] },
+            opacity: { duration: p.duration, times: [0, 0.08, 1] },
           }}
         />
       ))}
