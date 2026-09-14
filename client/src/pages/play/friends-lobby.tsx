@@ -66,6 +66,13 @@ interface FriendsLobbyProps {
 // screen's own streak is a wholly separate counter (see currentStreakFriends in schema.ts).
 const RESULT_TO_STREAK_DELAY_MS = 1500;
 const RESULT_EXIT_BUFFER_MS = 350;
+// Auto-advances the result away without needing a tap — same values as House's identical
+// AUTO_DISMISS_MS/AUTO_DISMISS_QUICK_MS (classic.tsx). A win gets the long delay (worth
+// lingering on), a loss/push the quick one (nothing left to wait for) — House's own version also
+// branches on whether Watch-to-2X is offered, which doesn't apply here (see friends-table-view's
+// own comment on why that offer isn't brought over), so this only branches on the result itself.
+const AUTO_DISMISS_MS = 3250;
+const AUTO_DISMISS_QUICK_MS = 1000;
 
 // Play with Friends. This same screen covers create/join, invite, and betting — only
 // "in_progress" (cards actually dealt) hands over to FriendsTableView. A fresh table starts
@@ -482,6 +489,25 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       }, flipDurationMs);
     }, 200);
   };
+
+  // Auto-advances the result away on its own, same as House (Anatole, 2026-09-14: "pas besoin de
+  // cliquer sur l'écran, que ce soit automatique") — mirrors classic.tsx's identical effect.
+  // Tapping still works as an early skip either way (handleDismissResult's own dismissedResultRef
+  // guard makes whichever of the two — a tap, or this timer — fires first the only one that
+  // actually does anything). If this result also completed a streak bonus, the delay stretches to
+  // cover the bar's own handoff + celebration hold, so it's never cut off before the player's
+  // actually seen it (same reasoning as House's own streakHandoffDelayMs/streakCelebrationTotalMs,
+  // simplified here since this bar has no CoinBurst duration to also account for).
+  useEffect(() => {
+    if (!showResult) return;
+    const baseDelay = resultOverlay?.type === "win" || resultOverlay?.type === "blackjack" ? AUTO_DISMISS_MS : AUTO_DISMISS_QUICK_MS;
+    const delay = streakCelebrationBonus == null
+      ? baseDelay
+      : Math.max(baseDelay, RESULT_TO_STREAK_DELAY_MS + RESULT_EXIT_BUFFER_MS + CELEBRATION_DURATION_MS);
+    const timer = setTimeout(() => handleDismissResult(), delay);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showResult, resultOverlay?.type, streakCelebrationBonus]);
 
   if (!tableId) return null;
 
