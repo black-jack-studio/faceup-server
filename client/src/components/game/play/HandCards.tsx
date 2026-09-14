@@ -305,10 +305,14 @@ export default function HandCards({
           // event instead of "my move, then the dealer's" — so this holds it back a bit longer
           // than the normal fallDelay + 0.4 formula gives every other card.
           //
-          // 0.6 (Anatole, 2026-09-14): standing on a settled hand felt too slow waiting on the
-          // dealer to react — was 0.9 (0.5, the hit's own finish, + 0.4 breathing room). Trimmed
-          // the breathing room to 0.1 (0.5 + 0.1 = 0.6): still a distinct "my move, then the
-          // dealer's" beat, not instant, just shorter.
+          // 0.6 -> 0.15 (speed audit, 2026-09-14): a hit flips the instant it lands (see
+          // revealDelay below) — this fixed pause was the one card in the whole game still
+          // making the player wait through dead air before anything moved, which is exactly what
+          // stood out as "off" next to everything else's snappier, instant-on-landing feel. 0.15
+          // reuses the same beat already used to separate the two initial-deal cards (fallDelay
+          // above, cardIndex * 0.15) instead of a bespoke number — still a distinct "my move,
+          // then the dealer's" beat, just built from the same vocabulary as the rest of the
+          // table instead of its own one-off pause.
           const isDealerHoleCardSlot = isDealer && cardIndex === 1;
           // skipFall collapses fallDelay to 0 for both initial-slot cards (see above). A
           // per-card (cardIndex * 0.08) offset used to sit on top of this, meant to spread the
@@ -330,7 +334,7 @@ export default function HandCards({
           // fallDelay + 0.4/skipFall formula unchanged; that pacing is deliberate suspense, not
           // dead time on the back of a tap.
           const revealDelay = isDealerHoleCardSlot
-            ? 0.6
+            ? 0.15
             : isInitialDealSlot
               ? fallDelay + (skipFall ? 0.1 + skipFallStagger : 0.4)
               : 0;
