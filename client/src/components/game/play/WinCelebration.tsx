@@ -102,7 +102,17 @@ export default function WinCelebration({ active, isBlackjack, count }: WinCelebr
       />
       {burst.pieces.map((p) => (
         <motion.span
-          key={p.id}
+          // Scoped to burst.id, not just p.id (0..count-1, the same values every burst) — back-
+          // to-back wins close enough together that the previous burst's own pieces hadn't
+          // unmounted yet (its 2.2s CELEBRATION_MS timer still pending, see the effect above)
+          // reused those same DOM nodes instead of mounting fresh ones, since React matches by
+          // key. A reused node never replays `initial` (that only applies on a true mount) — it
+          // just retargets `animate` from wherever it already was, which by then was sitting at
+          // y: "110vh" (already fallen off-screen) from its last run, so the "new" burst silently
+          // animated from off-screen back to off-screen: invisible, only the flash (which DOES
+          // key off burst.id already) visibly fired. Stanislas hit exactly this on a fast
+          // auto-bet blackjack (2026-09-14): flash fired, zero confetti pieces ever appeared.
+          key={`${burst.id}-${p.id}`}
           className="absolute top-0 rounded-sm"
           style={{ left: `${p.left}%`, backgroundColor: p.color, width: p.width, height: p.height }}
           // Opacity only ever fades IN, at the very start — the piece then stays fully opaque
