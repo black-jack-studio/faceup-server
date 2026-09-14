@@ -48,18 +48,20 @@ interface WinCelebrationProps {
   // itself stays true (the result sheet sits up well past that, see AUTO_DISMISS_MS).
   active: boolean;
   isBlackjack: boolean;
-  // Full-screen piece count, from winIntensity.ts's rainCount — separate from
-  // RoundResultBanner's own local ConfettiBurst (the quick pop right at the win text), scaled to
-  // actually read as filling the screen rather than just denser at one spot.
+  // Full-screen piece count, from winIntensity.ts's rainCount, scaled to actually read as
+  // filling the screen rather than just denser at one spot.
   count: number;
 }
 
-// The "Victory Royale" layer: a full-screen confetti rain plus one flash pulse, layered on top
-// of (not instead of) RoundResultBanner's own local burst — that one stays the quick pop right
-// at the win text, this is the ambient screen-filling moment behind it. Every win gets it, not
-// just big ones (Stanislas, 2026-09-14: "à fond" every time, not scaled down for small wins) —
-// count/colors still scale with winIntensity so a bigger win still reads as bigger, but the
-// full-screen treatment itself is never skipped.
+// The "Victory Royale" layer: a full-screen confetti rain plus one flash pulse — the ONLY
+// confetti a win triggers now. RoundResultBanner used to also fire its own local burst
+// (ConfettiBurst) right at the win text at the same time; the two together read as one
+// cluttered collision instead of one clean sweep (Stanislas, 2026-09-14, after watching the
+// recorded result: "t'as couplé les confettis du haut avec ceux du milieu... enlève ceux du
+// milieu" — so the local one was removed entirely, this is what's left). Every win gets this
+// full-screen layer, not just big ones (Stanislas, 2026-09-14: "à fond" every time, not scaled
+// down for small wins) — count/colors still scale with winIntensity so a bigger win still reads
+// as bigger, but the full-screen treatment itself is never skipped.
 //
 // No rotating light rays here on purpose — see ChestRewardReveal's own history (removed
 // 2026-09-13: "the confetti burst carries the celebratory moment on its own... extra noise"). A

@@ -688,7 +688,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // Scales this hand's whole celebration (confetti, flying coins, balance count-up speed, win
   // sound) to how big netResultAmount is relative to THIS room's own maxBet, not a flat coin
   // amount — see getWinIntensity. Only meaningful on an actual win; loss/push ignore it (their
-  // CoinBurst/ConfettiBurst never fire, and CountingBalance keeps its plain default there).
+  // CoinBurst/WinCelebration never fire, and CountingBalance keeps its plain default there).
   const isWinResult = resultType === "win" || resultType === "blackjack";
   const winIntensity = getWinIntensity(netResultAmount, ROOM.maxBet);
 

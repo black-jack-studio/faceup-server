@@ -6,7 +6,6 @@ import { formatFullNumber } from "@/lib/formatUtils";
 import { playSound } from "@/lib/sound";
 import { triggerHapticSuccess } from "@/lib/haptics";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
-import ConfettiBurst from "./ConfettiBurst";
 import type { GameResultType } from "../GameResultOverlay";
 import { getWinIntensity } from "@/lib/winIntensity";
 
@@ -241,25 +240,23 @@ export default function RoundResultBanner({
           >
           {/* Its own relative box, scoped to just the label/amount + XP rows below — not the
               challenge/rank row further down, and not this whole component's own pt-2 padding
-              either. ConfettiBurst centers on WHATEVER box it's given (absolute inset-0), so
-              this is what actually pins the burst's origin to where "+1"/"+5 XP" are printed
-              instead of the middle of the combined block including challenge/rank (Anatole,
-              2026-09-12: "les confettis, qu'ils explosent... au niveau de là où il y a marqué
-              1+5"). */}
+              either. */}
           <div className="relative w-full flex flex-col items-center">
-          <ConfettiBurst
-            active={isWin}
-            // Blackjack keeps its own extra flourish on top of the amount-scaled tier, same as
-            // before this scaled by amount at all.
-            count={isBlackjackResult ? intensity.confettiCount + 8 : intensity.confettiCount}
-          />
           {/* Win/blackjack get their own snappier, overshooting pop-in instead of just inheriting
               the outer block's gentler spring (initial={{scale:0.85}} above) — a loss/push stays
               on that original one, this is deliberately only for the moment worth flattering
               (Stanislas, 2026-09-14: make the win itself read as a bigger deal, "genre le top 1
               de fortnite"). key={resultType} so a win-after-win (a fresh reveal while this exact
               row is already mounted) still replays the pop instead of sitting there static the
-              second time. */}
+              second time.
+
+              No local confetti burst here any more (used to be ConfettiBurst, right at this row)
+              and no text glow either — WinCelebration's own full-screen rain, mounted separately
+              in classic.tsx, already carries the confetti moment; a second burst right here read
+              as the two effects colliding into one cluttered mess instead of one clean sweep, and
+              the glow behind the label read as a stray green halo (Stanislas, 2026-09-14, after
+              watching the recorded result: "t'as couplé les confettis du haut avec ceux du
+              milieu... la lueur verte derrière le Win je le veux pas"). */}
           <motion.div
             key={resultType}
             className="flex items-center justify-center gap-2.5"
@@ -268,7 +265,6 @@ export default function RoundResultBanner({
           >
             <span
               className={`font-bold ${isWin ? "text-4xl" : "text-2xl"} ${isBlackjackResult ? "text-[#FFD452]" : "text-white"}`}
-              style={isWin ? { textShadow: isBlackjackResult ? "0 0 20px rgba(255,196,84,0.6)" : "0 0 18px rgba(52,211,153,0.5)" } : undefined}
               data-testid="text-result-label"
             >
               {t(LABEL_KEY[resultType])}
