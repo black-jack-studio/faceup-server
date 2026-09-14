@@ -116,6 +116,17 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   // WinStreakBar, both owned by FriendsTableView but timed from here.
   const [hideResultBanner, setHideResultBanner] = useState(false);
   const [showStreakInResultSlot, setShowStreakInResultSlot] = useState(false);
+  // True for the whole span from tapping/auto-dismissing the result through the table's own
+  // full reset for the next hand (handleDismissResult owns both edges) — tells FriendsTableView's
+  // dealer slot there's nothing left to show there (the result already took its place and just
+  // left), not even a beat of the real dealerHand data. Deliberately its own explicit flag, not
+  // derived from reviewingLastHand && !showResult: that combination is ALSO true earlier, for the
+  // whole stretch between the hand settling server-side and dealerRevealMs actually elapsing —
+  // i.e. exactly the window the dealer's own reveal animation is supposed to be playing in. Using
+  // that broader combination here first (Anatole, 2026-09-14) hid the dealer's cards through that
+  // entire reveal instead of just the post-dismissal window, which is what read as the cards
+  // vanishing the instant the last seat acted instead of ever playing their reveal at all.
+  const [isDismissingResult, setIsDismissingResult] = useState(false);
   // Snapshotted the instant I confirm my bet — my own balance right before this hand's stake
   // left it, so the result sheet has a fixed number to count from instead of re-reading the
   // live (possibly already-credited) store balance once the hand settles.
@@ -462,6 +473,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
     if (dismissedResultRef.current) return;
     dismissedResultRef.current = true;
     setShowResult(false);
+    setIsDismissingResult(true);
     setTimeout(() => {
       // Flips every dealt card on the table back to its card-back face, in place — see
       // FriendsTableView's forceHidden and card.tsx's hideDelay. The underlying table/seat data
@@ -483,6 +495,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
         // had a chance to see it.
         setDismissedResult(true);
         setIsRoundEnding(false);
+        setIsDismissingResult(false);
         // Lets the bet bar tell "everyone's back" from "just me" (see allSeatsAcknowledged
         // below) instead of looking ready to bet the instant I alone dismiss.
         acknowledgeMutation.mutate();
@@ -658,7 +671,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                 animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
                 exit={{ opacity: 0, y: -12, transition: { duration: 0.2, ease: [0.55, 0, 0.85, 0.15] } }}
               >
-                <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} forceHidden={isRoundEnding} showResult={showResult} resultType={resultOverlay?.type ?? null} netResultAmount={resultOverlay?.netResultAmount ?? 0} onDismissResult={handleDismissResult} friendsStreak={friendsStreak} streakCelebrationBonus={streakCelebrationBonus} hideResultBanner={hideResultBanner} showStreakInResultSlot={showStreakInResultSlot} isDismissingResult={reviewingLastHand && !showResult} />
+                <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} forceHidden={isRoundEnding} showResult={showResult} resultType={resultOverlay?.type ?? null} netResultAmount={resultOverlay?.netResultAmount ?? 0} onDismissResult={handleDismissResult} friendsStreak={friendsStreak} streakCelebrationBonus={streakCelebrationBonus} hideResultBanner={hideResultBanner} showStreakInResultSlot={showStreakInResultSlot} isDismissingResult={isDismissingResult} />
               </motion.div>
             ) : (
               <motion.div
