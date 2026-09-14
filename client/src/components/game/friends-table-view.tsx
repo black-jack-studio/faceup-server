@@ -907,7 +907,20 @@ export default function FriendsTableView({
       {/* Always flex-1 regardless of whether the "waiting for…" block below is showing — ceding
           it a slice of this area (as a previous version did) shrank the main play area and
           visibly shifted every seat/button up whenever it appeared. */}
-      <div className="w-full flex-1 flex flex-col items-center justify-between min-h-0">
+      {/* Was `justify-between` over 3 flex-shrink-0 items (seats/dealer/actions-block), which
+          split the leftover vertical space into 2 implicit gaps sized by whatever was left —
+          fine while every state's content was roughly the same height, but the instant
+          RoundResultBanner (shorter than ActionBar) or the streak bar took the crossfade slot's
+          place, that slot's own footprint shrank and ALL the freed space piled into the gap
+          ABOVE it instead of staying there — reading as the result/streak content sitting hard
+          against my own cards with a big empty gap above it, nowhere near centered between the
+          dealer's total and my cards (Anatole, 2026-09-14, twice now). Two explicit `flex-1`
+          spacers below replace those two implicit gaps with the exact same proportional split
+          (both still share the leftover space equally, same as `justify-between` did) — the
+          difference is the second one is also the actual box the crossfade content renders
+          inside, so `justify-center`/`justify-end` on its content can center within the real
+          measured gap instead of a guessed fixed height. */}
+      <div className="w-full flex-1 flex flex-col items-center min-h-0">
         <div className={`w-full flex items-start px-2 ${soloFriendSlot ? "justify-center" : "justify-between"}`}>
           {soloFriendSlot === "left" ? renderSeat(leftAbs, "left") : soloFriendSlot === "right" ? renderSeat(rightAbs, "right") : (
             <>
@@ -917,9 +930,15 @@ export default function FriendsTableView({
           )}
         </div>
 
+        <div className="w-full flex-1 min-h-0" />
+
         <div className="flex-shrink-0">{renderDealer()}</div>
 
-        <div className="w-full flex-shrink-0 flex flex-col items-center gap-3">
+        {/* The real gap between the dealer's total and my own cards below — the box itself
+            (`flex-1`) always takes the exact same share of leftover space regardless of which
+            branch is inside it, so neither branch's presence ever changes the OTHER spacer's
+            size or the dealer/seats' own position, only what's centered/bottom-aligned in here. */}
+        <div className="w-full flex-1 min-h-0 flex flex-col items-center">
           {!!mySeat?.hand && (
             // Mounted for the whole hand, dealer reveal included — mySeat.hand is only ever
             // set while a hand is live or its just-settled result is still being reviewed
@@ -937,16 +956,12 @@ export default function FriendsTableView({
             // the instant a hand ends (Anatole, 2026-09-14). No Watch-to-2X here — that's a
             // Classic-solo-only offer, deliberately not brought over.
             //
-            // ActionBar itself is deliberately untouched below — same plain, natural-height
-            // rendering as before any of this (Anatole, 2026-09-14: "je voulais pas que tu les
-            // touches, ces boutons-là"). Only the result branch gets its own fixed-height (128px,
-            // same value as Classic solo/House's own equivalent box) centering box — it used to
-            // be sized to whichever content it held, and RoundResultBanner's own shorter
-            // footprint let that box shrink, dumping the freed space into the outer column's
-            // justify-between gap above it instead of staying put here — reading as the result
-            // sitting hard against my own cards with a big empty gap above it, not centered.
+            // ActionBar's own branch bottom-aligns (justify-end + pb-3, the same 12px gap to my
+            // cards below it used to get from this slot's old gap-3) instead of centering — same
+            // visual spot it's always sat in, untouched (Anatole, 2026-09-14: "je voulais pas que
+            // tu les touches, ces boutons-là"). Only the result/streak branch centers.
             //
-            // Deliberately NOT `position: relative`/`absolute` on the result box or its motion.div
+            // Deliberately NOT `position: relative`/`absolute` on this box or either branch below
             // (mode="wait" means actions/result are never both mounted at once, so there's
             // nothing to overlap) — RoundResultBanner's own full-table "tap anywhere to dismiss"
             // layer is an `absolute inset-0` that needs to skip past this box to the real
@@ -956,44 +971,41 @@ export default function FriendsTableView({
               {showResult ? (
                 <motion.div
                   key="result"
-                  className="w-full flex items-center justify-center"
-                  style={{ height: 128 }}
+                  className="w-full h-full flex flex-col items-center justify-center"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
                   exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
                 >
-                  <div className="w-full flex flex-col items-center">
-                    <RoundResultBanner
-                      show={showResult && !hideResultBanner}
-                      resultType={resultType}
-                      netResultAmount={netResultAmount}
-                      doubledTo={null}
-                      isDoubling={false}
-                      maxBet={MAX_BET}
-                      onDismiss={onDismissResult}
-                    />
-                    {/* Hands off to this same slot a beat after RoundResultBanner's own fade-out
-                        above (see hideResultBanner/showStreakInResultSlot timing, owned by
-                        friends-lobby.tsx) — this table's own independent win streak (see
-                        currentStreakFriends in schema.ts), same 3-win-cycle bar/flame/celebration
-                        as House's WinStreakBar, just not sharing House's own counter/leaderboard. */}
-                    {showStreakInResultSlot && (friendsStreak > 0 || streakCelebrationBonus != null) && (
-                      // Plain flex child, not absolutely positioned: by the time this mounts,
-                      // RoundResultBanner above has already faded out to `show=false` (see
-                      // hideResultBanner) and renders nothing, so this is the only actual content
-                      // in this column and centers the same way it did — nothing to overlap, same
-                      // reasoning as House's own identical handoff (classic.tsx: "the two never
-                      // actually overlap in the DOM").
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
-                        <WinStreakBar streak={friendsStreak} celebrationBonus={streakCelebrationBonus} />
-                      </motion.div>
-                    )}
-                  </div>
+                  <RoundResultBanner
+                    show={showResult && !hideResultBanner}
+                    resultType={resultType}
+                    netResultAmount={netResultAmount}
+                    doubledTo={null}
+                    isDoubling={false}
+                    maxBet={MAX_BET}
+                    onDismiss={onDismissResult}
+                  />
+                  {/* Hands off to this same slot a beat after RoundResultBanner's own fade-out
+                      above (see hideResultBanner/showStreakInResultSlot timing, owned by
+                      friends-lobby.tsx) — this table's own independent win streak (see
+                      currentStreakFriends in schema.ts), same 3-win-cycle bar/flame/celebration
+                      as House's WinStreakBar, just not sharing House's own counter/leaderboard. */}
+                  {showStreakInResultSlot && (friendsStreak > 0 || streakCelebrationBonus != null) && (
+                    // Plain flex child, not absolutely positioned: by the time this mounts,
+                    // RoundResultBanner above has already faded out to `show=false` (see
+                    // hideResultBanner) and renders nothing, so this is the only actual content
+                    // in this column and centers the same way it did — nothing to overlap, same
+                    // reasoning as House's own identical handoff (classic.tsx: "the two never
+                    // actually overlap in the DOM").
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
+                      <WinStreakBar streak={friendsStreak} celebrationBonus={streakCelebrationBonus} />
+                    </motion.div>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div
                   key="actions"
-                  className="w-full"
+                  className="w-full h-full flex flex-col justify-end pb-3"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
                   exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
@@ -1016,8 +1028,9 @@ export default function FriendsTableView({
               )}
             </AnimatePresence>
           )}
-          {renderSeat(bottomAbs, "bottom")}
         </div>
+
+        {renderSeat(bottomAbs, "bottom")}
       </div>
 
       {table.status === "betting" && mySeat && !mySeat.betConfirmed && (
