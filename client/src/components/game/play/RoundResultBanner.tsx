@@ -308,7 +308,7 @@ export default function RoundResultBanner({
             animate={rowMotion.animate}
           >
             <span
-              className={`font-bold ${isWin ? "text-4xl" : "text-2xl"} ${isBlackjackResult ? "text-[#FFD452]" : isLoss ? "text-[#f87171]" : "text-white"}`}
+              className={`font-bold ${isWin ? "text-4xl" : "text-2xl"} ${isBlackjackResult ? "text-[#FFD452]" : "text-white"}`}
               data-testid="text-result-label"
             >
               {t(LABEL_KEY[resultType])}
