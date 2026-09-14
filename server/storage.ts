@@ -442,6 +442,11 @@ async function generateUniqueTableCode(): Promise<string> {
   throw new Error("Failed to generate a unique table code after 10 attempts");
 }
 
+// Play with Friends' own win-streak cycle length — deliberately the same value as Classic
+// solo's STREAK_BONUS_THRESHOLD (routes.ts) but not the same constant, since the two are
+// independently tracked (see settleTableAndCredit and currentStreakFriends in schema.ts).
+const FRIENDS_STREAK_BONUS_THRESHOLD = 3;
+
 // DatabaseStorage implementation
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
@@ -2904,9 +2909,38 @@ export class DatabaseStorage implements IStorage {
     settleHandsAgainstDealer(mode, deck, dealerHand, hands);
 
     for (const s of seatsWithHands) {
+      // Play with Friends' own win streak — same 3-win-cycle/bonus-coins formula as Classic
+      // solo's applyClassicStreakBonus (routes.ts), but tracked on a wholly separate column
+      // (currentStreakFriends) and computed here instead, since PWF settles one seat's single
+      // hand at a time rather than Classic's occasionally-split batch (Anatole, 2026-09-14:
+      // wanted the same bar/bonus, explicitly NOT sharing Classic's own counter/leaderboard).
+      const [row] = await tx
+        .select({ streak: users.currentStreakFriends })
+        .from(users)
+        .where(eq(users.id, s.userId));
+      const priorStreak = row?.streak || 0;
+
+      let newStreak = priorStreak;
+      let bonusCoins = 0;
+      if (s.hand.result === "lose") {
+        newStreak = 0;
+      } else if (s.hand.result === "win" || s.hand.result === "blackjack") {
+        const peakStreak = priorStreak + 1;
+        const profit = (s.hand.payout || 0) - s.hand.bet;
+        bonusCoins = profit > 0 && peakStreak >= FRIENDS_STREAK_BONUS_THRESHOLD ? profit : 0;
+        newStreak = peakStreak >= FRIENDS_STREAK_BONUS_THRESHOLD ? 0 : peakStreak;
+      }
+      // Push leaves it untouched (newStreak stays priorStreak) — same rule as Classic solo.
+      s.hand.streakAfter = newStreak;
+      s.hand.streakBonus = bonusCoins > 0 ? bonusCoins : null;
+
       await tx
         .update(users)
-        .set({ coins: sql`${users.coins} + ${s.hand.payout || 0}`, updatedAt: new Date() })
+        .set({
+          coins: sql`${users.coins} + ${(s.hand.payout || 0) + bonusCoins}`,
+          ...(newStreak !== priorStreak ? { currentStreakFriends: newStreak } : {}),
+          updatedAt: new Date(),
+        })
         .where(eq(users.id, s.userId));
       await tx.update(tableSeats).set({ hand: s.hand }).where(eq(tableSeats.id, s.seatId));
     }

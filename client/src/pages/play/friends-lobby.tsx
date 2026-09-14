@@ -15,7 +15,8 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import BottomSheet from "@/components/BottomSheet";
 import { BetSlider } from "@/components/BetSlider";
 import FriendsTableView from "@/components/game/friends-table-view";
-import GameResultOverlay, { type GameResultType } from "@/components/game/GameResultOverlay";
+import type { GameResultType } from "@/components/game/GameResultOverlay";
+import { CELEBRATION_DURATION_MS } from "@/components/game/play/WinStreakBar";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
 import { formatFullNumber } from "@/lib/formatUtils";
@@ -59,6 +60,13 @@ interface FriendsLobbyProps {
   onClose?: () => void;
 }
 
+// How long the result banner (label+amount+XP) stays up before handing off, in the same slot,
+// to this table's own win streak bar — same values as House's identical handoff (classic.tsx's
+// RESULT_TO_STREAK_DELAY_MS/RESULT_EXIT_BUFFER_MS), kept independent constants here since this
+// screen's own streak is a wholly separate counter (see currentStreakFriends in schema.ts).
+const RESULT_TO_STREAK_DELAY_MS = 1500;
+const RESULT_EXIT_BUFFER_MS = 350;
+
 // Play with Friends. This same screen covers create/join, invite, and betting — only
 // "in_progress" (cards actually dealt) hands over to FriendsTableView. A fresh table starts
 // straight in "betting" (see createGameTable), and a settled hand's brief "waiting" status
@@ -88,9 +96,19 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   }, [balance]);
   const [resultOverlay, setResultOverlay] = useState<{
     type: Exclude<GameResultType, null>;
-    startingBalance: number;
-    endingBalance: number;
+    netResultAmount: number;
   } | null>(null);
+  // This table's own independent win streak (see currentStreakFriends in schema.ts) — set
+  // alongside resultOverlay from the same settled hand's data (hand.streakAfter/streakBonus,
+  // storage.ts's settleTableAndCredit). Same split/handoff as House's displayedStreak/
+  // streakCelebrationBonus (classic.tsx).
+  const [friendsStreak, setFriendsStreak] = useState(0);
+  const [streakCelebrationBonus, setStreakCelebrationBonus] = useState<number | null>(null);
+  // Same-slot handoff timing as House's identical hideResultBanner/showStreakInResultSlot
+  // (classic.tsx) — RoundResultBanner shows first, then a beat later hands its slot over to
+  // WinStreakBar, both owned by FriendsTableView but timed from here.
+  const [hideResultBanner, setHideResultBanner] = useState(false);
+  const [showStreakInResultSlot, setShowStreakInResultSlot] = useState(false);
   // Snapshotted the instant I confirm my bet — my own balance right before this hand's stake
   // left it, so the result sheet has a fixed number to count from instead of re-reading the
   // live (possibly already-credited) store balance once the hand settles.
@@ -98,6 +116,11 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   // Guards against re-showing the same settled hand's result on every background refetch
   // while the table sits in "waiting" — reset once my seat's hand clears for the next round.
   const resultShownRef = useRef(false);
+  // Guards handleDismissResult below against firing twice for the same hand — RoundResultBanner's
+  // own tap-anywhere-to-dismiss layer has no built-in debounce, so a fast double-tap can land as
+  // two separate click events before React re-renders showResult to false in between them.
+  // Mirrors Classic solo's identical dismissedRef (classic.tsx).
+  const dismissedResultRef = useRef(false);
   // True from the instant my hand settles until I dismiss the result sheet. Keeps
   // FriendsTableView on screen through that whole window (see showTableView below) instead of
   // cutting straight to the betting screen the moment the server moves past "in_progress" —
@@ -112,7 +135,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   // dismissing their own sheet first. My dismissal shouldn't wait on anyone else's.
   const [dismissedResult, setDismissedResult] = useState(false);
   // Separate from resultOverlay's own data (which persists until overwritten by the next
-  // hand's result) so dismissing can drive GameResultOverlay's exit animation via `show` alone,
+  // hand's result) so dismissing can drive RoundResultBanner's exit animation via `show` alone,
   // same split as Classic solo's showResult/resultType (classic.tsx) — clearing the data in
   // the same tick as the dismiss would skip that exit animation entirely instead of playing it.
   const [showResult, setShowResult] = useState(false);
@@ -328,16 +351,16 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
     onSuccess: invalidate,
   });
 
-  // Each player's own result sheet, from their own seat's settled hand only — never anyone
-  // else's. Mirrors Classic mode's GameResultOverlay: same win/loss/push/blackjack sheet, same
-  // balance count-up, just fed from this table's seat data instead of game-store.
+  // Each player's own result, from their own seat's settled hand only — never anyone else's.
+  // Mirrors Classic mode's RoundResultBanner: same win/loss/push/blackjack banner, same amount
+  // count-up, just fed from this table's seat data instead of game-store.
   //
   // reviewingLastHand flips on the instant the result is known (keeping FriendsTableView on
-  // screen — see showTableView). The sheet itself waits before appearing, long enough for the
+  // screen — see showTableView). The banner itself waits before appearing, long enough for the
   // dealer's own cards to finish their one-at-a-time reveal (see friends-table-view's
-  // renderDealer) instead of being instantly covered by the sheet sliding up — computed from
-  // however many cards the dealer actually ended up with, since a couple of hits takes visibly
-  // longer to reveal than a plain 2-card stand.
+  // renderDealer) instead of instantly cutting to the result over cards still mid-flip —
+  // computed from however many cards the dealer actually ended up with, since a couple of hits
+  // takes visibly longer to reveal than a plain 2-card stand.
   //
   // Depends on just the result *string* (a stable primitive), not the hand object itself or
   // dealerHand — those are fresh object references on every background refetch even when
@@ -368,16 +391,21 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
           hand.result === "lose" ? "loss" : hand.result === "push" ? "tie" : hand.result === "blackjack" ? "blackjack" : "win";
         const starting = preBetBalanceRef.current;
         const ending = starting - hand.bet + (hand.payout || 0);
-        // GameResultOverlay's startingBalance/endingBalance normally animate through the
-        // player's whole account balance (that's what Classic mode wants). Here they're fed
-        // this hand's own net change instead (0 -> +1, -1, ...) — at a 1-coin bet against a
-        // balance in the thousands, counting through the real balance reads as "you lost your
-        // whole stack" even though only the bet itself was ever at stake.
+        // RoundResultBanner's netResultAmount is this hand's own net change (+1, -1, ...), not
+        // the player's whole account balance — at a 1-coin bet against a balance in the
+        // thousands, showing the real balance's delta would still read fine here since there's
+        // no count-up animation to stretch across it, but computing it as ending - starting
+        // (rather than reading the live store balance) keeps it exact even if a background
+        // refetch already nudged that store between this hand settling and this timer firing.
+        dismissedResultRef.current = false;
         setResultOverlay({
           type,
-          startingBalance: 0,
-          endingBalance: ending - starting,
+          netResultAmount: ending - starting,
         });
+        // hand.streakAfter/streakBonus are always set by settleTableAndCredit (storage.ts) once
+        // this hand has actually settled — see their own comments in shared/blackjack-types.ts.
+        setFriendsStreak(hand.streakAfter ?? 0);
+        setStreakCelebrationBonus(hand.streakBonus ?? null);
         setShowResult(true);
       }, dealerRevealMs);
       return () => clearTimeout(timer);
@@ -388,6 +416,72 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myHandResult]);
+
+  // Same-slot handoff as House's identical effect (classic.tsx): a beat after the result starts
+  // showing, RoundResultBanner fades out (hideResultBanner) and, shortly after that, this table's
+  // own win streak bar fades in in its place (showStreakInResultSlot) — both reset back to false
+  // right when a NEW result starts showing, not when the old one is dismissed (see showResult's
+  // own gating in FriendsTableView's JSX for why that split doesn't need a separate reset here).
+  useEffect(() => {
+    if (!showResult) return;
+    setHideResultBanner(false);
+    setShowStreakInResultSlot(false);
+    const hideTimer = setTimeout(() => setHideResultBanner(true), RESULT_TO_STREAK_DELAY_MS);
+    const showBarTimer = setTimeout(() => setShowStreakInResultSlot(true), RESULT_TO_STREAK_DELAY_MS + RESULT_EXIT_BUFFER_MS);
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(showBarTimer);
+    };
+  }, [showResult]);
+
+  // Clears the celebration text once the bar's own minimum hold time is up, reverting it to its
+  // normal (freshly reset, 0-progress) countdown display — mirrors House's identical effect
+  // (classic.tsx), minus the coin-flight-duration comparison House's own version also waits on:
+  // this bar doesn't get a CoinBurst here (Anatole, 2026-09-14 — not asked for, and House's own
+  // burst needs a balance-display DOM ref this screen doesn't have an equivalent of).
+  useEffect(() => {
+    if (!showStreakInResultSlot || streakCelebrationBonus == null) return;
+    const timer = setTimeout(() => setStreakCelebrationBonus(null), CELEBRATION_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [showStreakInResultSlot, streakCelebrationBonus]);
+
+  // Fired from RoundResultBanner's own tap-anywhere layer, now mounted inside FriendsTableView
+  // (see its own comment) instead of GameResultOverlay's bottom-sheet backdrop. Same sequencing
+  // as Classic solo's identical handleDismissResult (classic.tsx): wait for the banner's own
+  // fade-out (200ms, matches FriendsTableView's crossfade exit) before flipping the table's
+  // cards back — starting that flip in the same instant the banner began fading would cut its
+  // exit visually short instead of letting it actually play.
+  const handleDismissResult = () => {
+    if (dismissedResultRef.current) return;
+    dismissedResultRef.current = true;
+    setShowResult(false);
+    setTimeout(() => {
+      // Flips every dealt card on the table back to its card-back face, in place — see
+      // FriendsTableView's forceHidden and card.tsx's hideDelay. The underlying table/seat data
+      // is deliberately left alone here so the reveal underneath the closing result banner
+      // already shows the cards turning over, instead of this screen swapping straight to the
+      // next betting round mid-face-up.
+      setIsRoundEnding(true);
+      // Same constant as Classic solo: hideDelay staggers 60ms per card index and the flip
+      // itself takes 500ms, plus a small buffer.
+      const flipDurationMs = 60 + 500 + 100;
+      setTimeout(() => {
+        setResultOverlay(null);
+        setReviewingLastHand(false);
+        // Sends me back to the betting screen right away — doesn't wait on a friend also
+        // dismissing their own sheet (see dismissedResult above). The next betting round isn't
+        // opened from here at all: placeTableBet itself lazily opens it the moment anyone
+        // actually places a bet (see its comment in storage.ts), so nobody's dismissal ever
+        // forces the table to move on before someone else still reviewing their own result has
+        // had a chance to see it.
+        setDismissedResult(true);
+        setIsRoundEnding(false);
+        // Lets the bet bar tell "everyone's back" from "just me" (see allSeatsAcknowledged
+        // below) instead of looking ready to bet the instant I alone dismiss.
+        acknowledgeMutation.mutate();
+      }, flipDurationMs);
+    }, 200);
+  };
 
   if (!tableId) return null;
 
@@ -521,10 +615,11 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
         ) : (
-          // The result sheet (GameResultOverlay below) covers this swap while it's up, so what's
-          // actually seen crossfading is its own backdrop fading out into whichever screen was
-          // underneath the whole time — this is what made that reveal read as an abrupt jump cut
-          // instead of one continuous motion. mode="wait" (not a sync crossfade): the table and
+          // ResultDimOverlay (rendered inside FriendsTableView, still mounted throughout the
+          // dismiss) covers this swap while it's up, so what's actually seen crossfading is its
+          // own dim fading out into whichever screen was underneath the whole time — this is
+          // what keeps that reveal from reading as an abrupt jump cut instead of one continuous
+          // motion. mode="wait" (not a sync crossfade): the table and
           // bet screens are wildly different heights/layouts, so overlapping them mid-transition
           // read as a layout jolt rather than a clean dissolve. Same easing curve the rest of the
           // app's sheet-opens already use (Battle Pass, Classic 21, ...) for a consistent feel.
@@ -537,7 +632,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                 animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
                 exit={{ opacity: 0, y: -12, transition: { duration: 0.2, ease: [0.55, 0, 0.85, 0.15] } }}
               >
-                <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} forceHidden={isRoundEnding} />
+                <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} forceHidden={isRoundEnding} showResult={showResult} resultType={resultOverlay?.type ?? null} netResultAmount={resultOverlay?.netResultAmount ?? 0} onDismissResult={handleDismissResult} friendsStreak={friendsStreak} streakCelebrationBonus={streakCelebrationBonus} hideResultBanner={hideResultBanner} showStreakInResultSlot={showStreakInResultSlot} />
               </motion.div>
             ) : (
               <motion.div
@@ -737,42 +832,6 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
           </button>
         </div>
       </BottomSheet>
-
-      <GameResultOverlay
-        show={showResult}
-        resultType={resultOverlay?.type ?? null}
-        startingBalance={resultOverlay?.startingBalance ?? 0}
-        endingBalance={resultOverlay?.endingBalance ?? 0}
-        tableId={tableId}
-        onDismiss={() => {
-          setShowResult(false);
-          // Flips every dealt card on the table back to its card-back face, in place — see
-          // FriendsTableView's forceHidden and card.tsx's hideDelay. Mirrors Classic solo's
-          // identical handleDismissResult (classic.tsx): the underlying table/seat data is
-          // deliberately left alone here so the reveal underneath the closing result sheet
-          // already shows the cards turning over, instead of this screen swapping straight to
-          // the next betting round mid-face-up.
-          setIsRoundEnding(true);
-          // Same constant as Classic solo: hideDelay staggers 60ms per card index and the flip
-          // itself takes 500ms, plus a small buffer.
-          const flipDurationMs = 60 + 500 + 100;
-          setTimeout(() => {
-            setResultOverlay(null);
-            setReviewingLastHand(false);
-            // Sends me back to the betting screen right away — doesn't wait on a friend also
-            // dismissing their own sheet (see dismissedResult above). The next betting round
-            // isn't opened from here at all: placeTableBet itself lazily opens it the moment
-            // anyone actually places a bet (see its comment in storage.ts), so nobody's dismissal
-            // ever forces the table to move on before someone else still on their own result
-            // sheet has had a chance to see it.
-            setDismissedResult(true);
-            setIsRoundEnding(false);
-            // Lets the bet bar tell "everyone's back" from "just me" (see allSeatsAcknowledged
-            // below) instead of looking ready to bet the instant I alone dismiss.
-            acknowledgeMutation.mutate();
-          }, flipDurationMs);
-        }}
-      />
     </motion.div>
   );
 }

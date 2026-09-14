@@ -32,10 +32,10 @@ import { trackCoinsDepleted } from "@/lib/analytics";
 import { useToast } from "@/hooks/use-toast";
 
 // Entry-level room preset (lowest tapis, mise mini/maxi basse). Room names are meant to climb
-// in glamour as the tapis mini goes up (Garage -> ... -> Vegas -> Paris -> Monaco), not stay
+// in glamour as the tapis mini goes up (House -> ... -> Vegas -> Paris -> Monaco), not stay
 // "Las Vegas" at the very bottom rung. Not wired to a real room system yet — every table is
 // this same preset for now.
-const ROOM = { name: "Garage", minBet: 1, maxBet: 500 };
+const ROOM = { name: "House", minBet: 1, maxBet: 500 };
 
 // EXPERIMENTAL (Anatole, 2026-09-12) — test change: the result's auto-advance/streak-handoff
 // below now runs the same way in manual play as in auto-bet (2026-09-12, second pass — it
@@ -69,12 +69,34 @@ const AUTO_DISMISS_MS = 3250;
 // This shorter delay only applies when canOfferDouble is false, so a real win — the one case
 // actually worth the wait — is untouched.
 const AUTO_DISMISS_QUICK_MS = 1000;
-// How long a 2-card flip actually takes on screen — shared by handleDismissResult's own
-// flipDurationMs (the just-finished hand's cards turning face down) and the auto-hand-reveal
-// gate near canHit/canStand below (a freshly auto-dealt hand's own 2 cards turning face up) —
-// same PlayingCard flip animation either direction. hideDelay staggers 60ms per card index (see
-// HandCards) and the flip itself takes 500ms, plus a small buffer.
-const TWO_CARD_FLIP_MS = 60 + 500 + 100;
+// The two directions of a 2-card flip no longer take the same time, so they get separate
+// constants instead of one shared number pretending they're symmetric (that's what this used to
+// be — TWO_CARD_FLIP_MS, a single 660ms borrowed for both — until an audit found it silently
+// wrong on both ends, see below).
+//
+// Round end (handleDismissResult's flipDurationMs): the just-finished hand's cards turning face
+// down. HandCards' hideDelay is 0 for every card (no stagger — they turn together, see its own
+// comment), so this is just the flip itself (500ms) plus a small buffer.
+const HIDE_FLIP_MS = 500 + 100;
+// The auto-hand-reveal gate near canHit/canStand below: a freshly auto-dealt hand's own 2 cards
+// turning face up. These stagger their fall (0.15s for the 2nd card) and only start flipping
+// 0.4s after landing (HandCards' isInitialDealSlot formula), so the 2nd card doesn't finish until
+// 0.15 + 0.4 + 0.5 = 1.05s — noticeably longer than the hide direction above. Used to reuse the
+// old shared constant's 660ms here, which let Hit/Stand/etc. light back up while that 2nd card
+// was still mid-flip, ahead of the "only once everything's actually revealed" this gate exists
+// for.
+const REVEAL_FLIP_MS = 150 + 400 + 500 + 100;
+// HandCards' own dealerHoleCardDelay default (0.15s) assumes nothing else is animating when the
+// dealer's hole card starts its reveal — true for Stand, where the player's hand doesn't change.
+// A hit that busts, or a double, deals the player a fresh card in the very same store update that
+// also reveals the dealer's hand, so that card is still mid-fall/flip in the player's own
+// (sibling) HandCards at the exact instant the dealer's would start under the default delay —
+// Anatole, 2026-09-14: "ma carte, elle a à peine fini d'atterrir... que les cartes du dealer
+// commencent déjà". Used instead of the default whenever lastActionDrewCardRef is true (see
+// handlePlayerAction) — long enough for that fresh card to actually finish (0.5s, its flip
+// duration, since a hit flips the instant it lands) plus the same 0.15s "my move, then the
+// dealer's" beat the default itself is built from.
+const DEALER_REVEAL_DELAY_AFTER_DRAW = 0.5 + 0.15;
 // How long whatever's currently in the result slot (RoundResultBanner, or — once the handoff's
 // happened — the win streak bar) takes to actually fade out once dismissed, before the cards'
 // own flip-back starts — matches both of their own exit transitions. Used to fire in the same
@@ -409,8 +431,17 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     }
   };
 
+  // Whether the player's MOST RECENT action also dealt them a fresh card — read by the dealer's
+  // HandCards below (dealerHoleCardDelay) to tell a bust-via-hit/double apart from a Stand. Only
+  // ever reset by the next action actually taken, so it stays correct through however many hits
+  // happen before the round finally ends: it always reflects the one action that ended it,
+  // whichever that turns out to be. See DEALER_REVEAL_DELAY_AFTER_DRAW's own comment for why this
+  // matters.
+  const lastActionDrewCardRef = useRef(false);
+
   const handlePlayerAction = (action: "hit" | "stand" | "double" | "split") => {
     if (isProcessingAction) return;
+    lastActionDrewCardRef.current = action === "hit" || action === "double";
     if (action === "hit") hit();
     if (action === "stand") stand();
     if (action === "double") double();
@@ -419,8 +450,9 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
 
   // EXPERIMENTAL, auto-bet only (Anatole, 2026-09-12): gameState flips to "playing" the instant
   // the server responds with a freshly auto-dealt hand — before that hand's own 2 cards have
-  // actually finished flipping face up on screen (same TWO_CARD_FLIP_MS animation the round-end
-  // turn-over uses, just the other direction). Hit/Stand/Double/Split/Swap read gameState
+  // actually finished flipping face up on screen (REVEAL_FLIP_MS above — see its own comment for
+  // why this is no longer the same number as the round-end turn-over's). Hit/Stand/Double/Split/
+  // Swap read gameState
   // directly (see isHandInteractable below), so without this they lit up — tappable-looking —
   // before there was anything dealt yet to actually tap ("je voudrais qu'ils redeviennent
   // clairs... quand toutes les cartes sont retournées, pas avant. Mais pas trop tard non
@@ -434,7 +466,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     prevGameStateForAutoRevealRef.current = gameState;
     if (wasAlreadyPlaying || gameState !== "playing" || !autoBetEnabled) return;
     setAutoHandRevealing(true);
-    const timer = setTimeout(() => setAutoHandRevealing(false), TWO_CARD_FLIP_MS);
+    const timer = setTimeout(() => setAutoHandRevealing(false), REVEAL_FLIP_MS);
     return () => clearTimeout(timer);
   }, [gameState, autoBetEnabled]);
   // What Hit/Stand/Double/Split/Swap actually check instead of a bare gameState === "playing" —
@@ -585,9 +617,13 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   };
 
   // A short, fixed beat AFTER the cards genuinely finish (not a substitute for waiting on
-  // them) — just enough for the last card to visually settle before the sheet flies up.
+  // them) — just enough for the last card to visually settle before the sheet flies up. 400 ->
+  // 150 (speed audit, 2026-09-14): same small-buffer vocabulary used everywhere else in this file
+  // (HIDE_FLIP_MS/REVEAL_FLIP_MS's own +100 buffers) — 400ms was dead air left over from when the
+  // dealer's hole card had a much longer wind-up before it even started flipping (see its
+  // revealDelay in HandCards, cut the same day for the same reason).
   const handleDealerHandSettled = useCallback(() => {
-    setTimeout(() => revealResultRef.current(), 400);
+    setTimeout(() => revealResultRef.current(), 150);
   }, []);
 
   const handleDismissResult = () => {
@@ -619,8 +655,8 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
 
       // Always exactly 2 cards actually flip now (see the trim above — anything beyond that never
       // animates, it's just gone), so this no longer needs to scale with hand size — see
-      // TWO_CARD_FLIP_MS's own comment above.
-      const flipDurationMs = TWO_CARD_FLIP_MS;
+      // HIDE_FLIP_MS's own comment above.
+      const flipDurationMs = HIDE_FLIP_MS;
 
       setTimeout(() => {
         // resultType is deliberately NOT cleared here. GameResultOverlay bails out with
@@ -918,7 +954,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
               w-20 is load-bearing too, for the same reason h-10 is: the crossfading text is
               `absolute inset-0` (out of flow) so this box has no in-flow content left to size
               itself from — as a flex item with only ml-auto/text-right and no explicit width,
-              it collapsed to 0 width, clipping "Garage"/"1–500" and, once a hand starts, "Bet"/
+              it collapsed to 0 width, clipping "House"/"1–500" and, once a hand starts, "Bet"/
               the player's actual wager entirely invisible despite both being in the DOM. */}
           <div className="ml-auto text-right overflow-hidden relative h-10 w-20">
             <AnimatePresence mode={fadeMode} initial={false}>
@@ -963,6 +999,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             showPositionedTotal
             total={dealerTotal}
             onDealerHandSettled={handleDealerHandSettled}
+            dealerHoleCardDelay={lastActionDrewCardRef.current ? DEALER_REVEAL_DELAY_AFTER_DRAW : undefined}
             skipInitialFall
             placeholderCount={2}
           />
