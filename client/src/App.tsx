@@ -13,8 +13,7 @@ import { initAdMob } from "@/lib/admob";
 import { initPurchases } from "@/lib/revenuecat";
 import { syncAnalyticsTrackingConsent, trackAppBackgrounded } from "@/lib/analytics";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
-import { unlockAudio } from "@/lib/sound";
-import { initGameSounds } from "@/lib/game-sounds";
+import { playSound, unlockAudio } from "@/lib/sound";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useTranslation } from "react-i18next";
 import { App as CapacitorApp } from "@capacitor/app";
@@ -452,13 +451,28 @@ function App() {
     // Home (see home.tsx), so this just upgrades PostHog's persistence out of its cookieless
     // default if a previous session already granted tracking.
     syncAnalyticsTrackingConsent();
-    initGameSounds();
     // Sounds triggered outside a tap (dealer draws, server-synced results) are blocked by
     // WebView autoplay restrictions until *some* user gesture has played audio first — see
     // unlockAudio's own comment. `once: true` is enough since it only needs to happen once
     // per app session.
     window.addEventListener("pointerdown", unlockAudio, { once: true });
   }, [initializeAuth]);
+
+  useEffect(() => {
+    // App-wide click sound: rather than sprinkling playSound("buttonClick") through every
+    // button/link call site (easy to miss new ones), listen once at the root in the capture
+    // phase and play it for any click that lands on a button, link, or ARIA button-role element
+    // anywhere in the tree, including inside overlays/sheets mounted later.
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const el = target?.closest('button, [role="button"], a');
+      if (!el) return;
+      if ((el as HTMLButtonElement).disabled || el.getAttribute("aria-disabled") === "true") return;
+      playSound("buttonClick");
+    };
+    window.addEventListener("click", handleClick, { capture: true });
+    return () => window.removeEventListener("click", handleClick, { capture: true });
+  }, []);
 
   useEffect(() => {
     // /api/push/register-token is authenticated, so this can't run until initializeAuth

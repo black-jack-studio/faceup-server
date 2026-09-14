@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { playSound } from "@/lib/sound";
 import PlayingCard from "../card";
 import { CardSize } from "@/components/PlayingCard";
 import { Card } from "@/lib/blackjack/engine";
@@ -202,6 +203,7 @@ export default function HandCards({
   // displayed total, both variants) and, for the dealer specifically, also cues the next card
   // to mount if the dealer drew more than what's on the table yet (see dealerMountedCount above).
   const handleCardFlipComplete = (cardIndex: number) => {
+    playSound("cardFlip");
     setRevealedCount((prev) => (cardIndex === prev ? prev + 1 : prev));
     if (isDealer) {
       setDealerMountedCount((prev) => (cardIndex === prev - 1 && prev < cards.length ? prev + 1 : prev));

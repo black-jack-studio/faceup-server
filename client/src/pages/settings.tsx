@@ -12,7 +12,7 @@ import BottomSheet from "@/components/BottomSheet";
 import { GameRulesContent } from "@/pages/game-rules";
 import { CreditsContent } from "@/pages/credits";
 import { Switch } from "@/components/ui/switch";
-import { isSoundEnabled, setSoundEnabled, unlockAudio, playSound } from "@/lib/sound";
+import { isSoundEnabled, setSoundEnabled, unlockAudio } from "@/lib/sound";
 import { isHapticsEnabled, setHapticsEnabled } from "@/lib/haptics";
 import { setAppLanguage, type AppLanguage } from "@/i18n";
 
@@ -45,7 +45,6 @@ export default function Settings() {
     setSoundEnabled(checked);
     if (checked) {
       unlockAudio();
-      playSound("buttonClick");
     }
   };
 
