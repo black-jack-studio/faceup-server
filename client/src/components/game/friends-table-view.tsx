@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { triggerHapticTick } from "@/lib/haptics";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
@@ -18,7 +18,8 @@ import WinStreakBar from "./play/WinStreakBar";
 import ResultDimOverlay from "./play/ResultDimOverlay";
 import WinCelebration from "./play/WinCelebration";
 import { getWinIntensity } from "@/lib/winIntensity";
-import type { GameResultType } from "./GameResultOverlay";
+import { useCountdown, type GameResultType } from "./GameResultOverlay";
+import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import PlayingCard from "./card";
 import RollingTotal from "./play/RollingTotal";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
@@ -365,6 +366,55 @@ export default function FriendsTableView({
   const winIntensity = getWinIntensity(netResultAmount, MAX_BET);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
+
+  // Watch-to-2X — same offer, same shared daily counter, and same button as Classic solo's
+  // (classic.tsx), claimed against this table's own seat instead of a solo game
+  // (gameService.doubleTableReward). Anatole, 2026-09-14: brought back after all, now that the
+  // buttons' own slot is what frees up for it once a win shows (the result itself moved to the
+  // dealer's own slot instead — see below).
+  const [doubledTo, setDoubledTo] = useState<number | null>(null);
+  const [isDoubling, setIsDoubling] = useState(false);
+  // Fresh offer per hand — without this a double claimed on a previous hand would still show as
+  // claimed on the next one (this component stays mounted across many hands at this same table).
+  useEffect(() => {
+    if (showResult) {
+      setDoubledTo(null);
+      setIsDoubling(false);
+    }
+  }, [showResult]);
+  const canOfferDouble = isWinResult && netResultAmount > 0;
+  const showWatchToDouble = showResult && canOfferDouble;
+  const { data: doubleRewardStatus, refetch: refetchDoubleRewardStatus } = useQuery({
+    queryKey: ["/api/game/double-reward/status"],
+    queryFn: () => gameService.getDoubleRewardStatus(),
+    enabled: showWatchToDouble,
+  });
+  const watchedToday = doubleRewardStatus?.watchedToday ?? 0;
+  const dailyLimit = doubleRewardStatus?.limit ?? 3;
+  const dailyLimitReached = watchedToday >= dailyLimit;
+  const resetCountdown = useCountdown(dailyLimitReached ? doubleRewardStatus?.resetAt ?? null : null);
+
+  const handleWatchAdToDouble = async () => {
+    if (isDoubling || doubledTo !== null || dailyLimitReached) return;
+    setIsDoubling(true);
+    try {
+      const earned = await showRewardedAd();
+      if (!earned) return;
+      const { newNetResult } = await gameService.doubleTableReward(tableId);
+      setDoubledTo(newNetResult);
+      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/weekly-xp"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/weekly-xp/me"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
+      refetchDoubleRewardStatus();
+      useUserStore.getState().loadUser();
+    } catch (error) {
+      console.error("Failed to double table reward:", error);
+    } finally {
+      setIsDoubling(false);
+    }
+  };
 
   const betMutation = useMutation({
     mutationFn: async (amount: number) => {
@@ -917,7 +967,58 @@ export default function FriendsTableView({
           )}
         </div>
 
-        <div className="flex-shrink-0">{renderDealer()}</div>
+        {/* The dealer's own cards/total fade out to make room for the result — and, a beat
+            later, this table's own streak bar — right where the dealer's hand was, instead of
+            down at the buttons (Anatole, 2026-09-14: swapped which end of the table shows the
+            result, now that the buttons' own slot is doing something else — see below). */}
+        <div className="flex-shrink-0 w-full flex flex-col items-center">
+          <AnimatePresence mode="wait" initial={false}>
+            {showResult ? (
+              <motion.div
+                key="dealer-result"
+                className="w-full flex flex-col items-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+              >
+                <RoundResultBanner
+                  show={showResult && !hideResultBanner}
+                  resultType={resultType}
+                  netResultAmount={netResultAmount}
+                  doubledTo={doubledTo}
+                  isDoubling={isDoubling}
+                  maxBet={MAX_BET}
+                  onDismiss={onDismissResult}
+                />
+                {/* Hands off to this same slot a beat after RoundResultBanner's own fade-out
+                    above (see hideResultBanner/showStreakInResultSlot timing, owned by
+                    friends-lobby.tsx) — this table's own independent win streak (see
+                    currentStreakFriends in schema.ts), same 3-win-cycle bar/flame/celebration as
+                    House's WinStreakBar, just not sharing House's own counter/leaderboard. */}
+                {showStreakInResultSlot && (friendsStreak > 0 || streakCelebrationBonus != null) && (
+                  // Plain flex child, not absolutely positioned: by the time this mounts,
+                  // RoundResultBanner above has already faded out to `show=false` (see
+                  // hideResultBanner) and renders nothing, so this is the only actual content in
+                  // this column — nothing to overlap, same reasoning as House's own identical
+                  // handoff (classic.tsx: "the two never actually overlap in the DOM").
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
+                    <WinStreakBar streak={friendsStreak} celebrationBonus={streakCelebrationBonus} />
+                  </motion.div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="dealer-cards"
+                className="w-full flex flex-col items-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+              >
+                {renderDealer()}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         <div className="w-full flex-shrink-0 flex flex-col items-center gap-3">
           {!!mySeat?.hand && (
@@ -928,67 +1029,54 @@ export default function FriendsTableView({
             // used to hide the whole grid the instant the last seat acted and the table
             // flipped to "waiting" for the dealer's reveal — exactly when isMyTurn is already
             // false, so it just needs to stay mounted and dim rather than disappear.
-            // Crossfades between the shared ActionBar (same component Classic solo/House uses,
-            // so Hit/Stand/Double/Swap always look and behave identically instead of two
-            // hand-rolled copies quietly drifting apart) and RoundResultBanner, exactly in this
-            // same slot — mirrors House's own result banner (label+amount, XP row,
-            // challenge/rank row, same sounds/haptics) but anchored here instead of House's own
-            // mid-table slot, since the buttons are what the player's attention is already on
-            // the instant a hand ends (Anatole, 2026-09-14). No Watch-to-2X here — that's a
-            // Classic-solo-only offer, deliberately not brought over.
-            //
-            // ActionBar itself is deliberately untouched below — same plain, natural-height
-            // rendering as before any of this (Anatole, 2026-09-14: "je voulais pas que tu les
-            // touches, ces boutons-là"). Only the result branch gets its own fixed-height (128px,
-            // same value as Classic solo/House's own equivalent box) centering box — it used to
-            // be sized to whichever content it held, and RoundResultBanner's own shorter
-            // footprint let that box shrink, dumping the freed space into the outer column's
-            // justify-between gap above it instead of staying put here — reading as the result
-            // sitting hard against my own cards with a big empty gap above it, not centered.
-            //
-            // Deliberately NOT `position: relative`/`absolute` on the result box or its motion.div
-            // (mode="wait" means actions/result are never both mounted at once, so there's
-            // nothing to overlap) — RoundResultBanner's own full-table "tap anywhere to dismiss"
-            // layer is an `absolute inset-0` that needs to skip past this box to the real
-            // positioned root (FriendsTableView's own outer div) to cover the whole table rather
-            // than just this band; giving this box its own position would trap that layer here.
+            // Crossfades between the shared ActionBar (same component Classic solo/House uses)
+            // and the Watch-to-2X button, exactly like House's own equivalent box in classic.tsx
+            // — a win replaces the buttons with the offer; a loss/push just leaves ActionBar
+            // sitting there (naturally inert once the hand's over).
             <AnimatePresence mode="wait" initial={false}>
-              {showResult ? (
+              {showWatchToDouble ? (
                 <motion.div
-                  key="result"
-                  className="w-full flex items-center justify-center"
-                  style={{ height: 128 }}
+                  key="watch2x"
+                  className="w-full flex flex-col items-center gap-1.5"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
                   exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
                 >
-                  <div className="w-full flex flex-col items-center">
-                    <RoundResultBanner
-                      show={showResult && !hideResultBanner}
-                      resultType={resultType}
-                      netResultAmount={netResultAmount}
-                      doubledTo={null}
-                      isDoubling={false}
-                      maxBet={MAX_BET}
-                      onDismiss={onDismissResult}
-                    />
-                    {/* Hands off to this same slot a beat after RoundResultBanner's own fade-out
-                        above (see hideResultBanner/showStreakInResultSlot timing, owned by
-                        friends-lobby.tsx) — this table's own independent win streak (see
-                        currentStreakFriends in schema.ts), same 3-win-cycle bar/flame/celebration
-                        as House's WinStreakBar, just not sharing House's own counter/leaderboard. */}
-                    {showStreakInResultSlot && (friendsStreak > 0 || streakCelebrationBonus != null) && (
-                      // Plain flex child, not absolutely positioned: by the time this mounts,
-                      // RoundResultBanner above has already faded out to `show=false` (see
-                      // hideResultBanner) and renders nothing, so this is the only actual content
-                      // in this column and centers the same way it did — nothing to overlap, same
-                      // reasoning as House's own identical handoff (classic.tsx: "the two never
-                      // actually overlap in the DOM").
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
-                        <WinStreakBar streak={friendsStreak} celebrationBonus={streakCelebrationBonus} />
-                      </motion.div>
+                  {/* n/limit remaining today, same grey as Classic solo's identical label —
+                      always shows this count, reached or not; only the button itself changes
+                      once the daily plays run out. */}
+                  <span className="text-xs text-white/50 text-center tabular-nums" data-testid="text-watch-to-double-count">
+                    {Math.max(dailyLimit - watchedToday, 0)}/{dailyLimit}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleWatchAdToDouble();
+                    }}
+                    disabled={isDoubling || doubledTo !== null || dailyLimitReached}
+                    className="w-full h-14 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    data-testid="button-watch-to-double"
+                  >
+                    {isDoubling ? (
+                      <span className="w-4 h-4 rounded-full border-2 border-[#15161A]/30 border-t-[#15161A] animate-spin" />
+                    ) : doubledTo !== null ? (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                          <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        {t("resultOverlay.doubled")}
+                      </>
+                    ) : dailyLimitReached ? (
+                      // Out of plays for today — the button itself becomes the countdown to the
+                      // next reset, in place of the play icon + label.
+                      <span className="tabular-nums">{resetCountdown ?? "--:--:--"}</span>
+                    ) : (
+                      <>
+                        <WatchAdIcon size={18} strokeWidth={3} />
+                        {t("resultOverlay.watchToDouble")}
+                      </>
                     )}
-                  </div>
+                  </button>
                 </motion.div>
               ) : (
                 <motion.div
