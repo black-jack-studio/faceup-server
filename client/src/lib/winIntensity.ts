@@ -9,6 +9,12 @@ export type WinTier = "small" | "medium" | "large" | "huge";
 interface TierSpec {
   tier: WinTier;
   confettiCount: number;
+  // Piece count for the full-screen WinCelebration rain (client/src/components/game/play/
+  // WinCelebration.tsx) — separate from confettiCount above, which only ever feeds the small
+  // local burst right at the win text. Every win gets the full-screen layer now, not just big
+  // ones (Stanislas, 2026-09-14: "à fond" every time) — this still scales it with the win's own
+  // size so a huge win reads as bigger than a min-bet one, it just never drops to zero/skips it.
+  rainCount: number;
   coinCount: number;
   countDuration: number;
   soundPlaybackRate: number;
@@ -22,10 +28,10 @@ interface TierSpec {
 // than more scattered). coinCount/countDuration/sound untouched, this was specifically about the
 // burst itself feeling bigger, not the whole celebration.
 const TIERS: (TierSpec & { minRatio: number })[] = [
-  { tier: "small", minRatio: 0, confettiCount: 22, coinCount: 3, countDuration: 0.6, soundPlaybackRate: 1, soundVolumeBoost: 0 },
-  { tier: "medium", minRatio: 0.2, confettiCount: 34, coinCount: 6, countDuration: 1.0, soundPlaybackRate: 1, soundVolumeBoost: 0 },
-  { tier: "large", minRatio: 0.5, confettiCount: 48, coinCount: 10, countDuration: 1.4, soundPlaybackRate: 1.05, soundVolumeBoost: 0.1 },
-  { tier: "huge", minRatio: 1, confettiCount: 75, coinCount: 16, countDuration: 1.8, soundPlaybackRate: 1.15, soundVolumeBoost: 0.2 },
+  { tier: "small", minRatio: 0, confettiCount: 22, rainCount: 55, coinCount: 3, countDuration: 0.6, soundPlaybackRate: 1, soundVolumeBoost: 0 },
+  { tier: "medium", minRatio: 0.2, confettiCount: 34, rainCount: 80, coinCount: 6, countDuration: 1.0, soundPlaybackRate: 1, soundVolumeBoost: 0 },
+  { tier: "large", minRatio: 0.5, confettiCount: 48, rainCount: 110, coinCount: 10, countDuration: 1.4, soundPlaybackRate: 1.05, soundVolumeBoost: 0.1 },
+  { tier: "huge", minRatio: 1, confettiCount: 75, rainCount: 150, coinCount: 16, countDuration: 1.8, soundPlaybackRate: 1.15, soundVolumeBoost: 0.2 },
 ];
 
 // Capped at 1: betting near/at the table's max already maxes out the celebration (winning

@@ -20,6 +20,7 @@ import RoundResultBanner from "@/components/game/play/RoundResultBanner";
 import WinStreakBar, { CELEBRATION_DURATION_MS } from "@/components/game/play/WinStreakBar";
 import CoinBurst from "@/components/game/play/CoinBurst";
 import ResultDimOverlay from "@/components/game/play/ResultDimOverlay";
+import WinCelebration from "@/components/game/play/WinCelebration";
 import CountingBalance from "@/components/game/CountingBalance";
 import BottomSheet from "@/components/BottomSheet";
 import NoEntry from "@/icons/NoEntry";
@@ -1321,6 +1322,17 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
       </div>
 
       <ResultDimOverlay show={showResult} />
+
+      {/* Full-screen confetti rain + flash, on top of RoundResultBanner's own local burst — see
+          WinCelebration's own comment for why every win gets this now, not just big ones. Root-
+          level sibling for the same reason ResultDimOverlay/CoinBurst are (see ResultDimOverlay's
+          own comment): nothing buried in the header/dealer column reliably out-ranks siblings
+          like the player's cards block. */}
+      <WinCelebration
+        active={showResult && isWinResult}
+        isBlackjack={resultType === "blackjack"}
+        count={winIntensity.rainCount}
+      />
 
       {/* Only on an actual win — a loss/push just lets the header balance count down/hold with
           no fanfare (see the brief this came from). */}

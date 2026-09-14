@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { gameService, type HandRewardsSnapshot } from "@/services/gameService";
 import { formatFullNumber } from "@/lib/formatUtils";
 import { playSound } from "@/lib/sound";
+import { triggerHapticSuccess } from "@/lib/haptics";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import ConfettiBurst from "./ConfettiBurst";
 import type { GameResultType } from "../GameResultOverlay";
@@ -163,11 +164,20 @@ export default function RoundResultBanner({
     if (!show || !resultType) return;
     if (resultType === "win" || resultType === "blackjack") {
       playSound("win", { playbackRate: intensity.soundPlaybackRate, volumeBoost: intensity.soundVolumeBoost });
+      // Every win now, not just the biggest ones — see WinCelebration's own comment for the
+      // "à fond, chaque victoire" decision this matches (Stanislas, 2026-09-14).
+      triggerHapticSuccess();
     }
     else if (resultType === "loss") playSound("lose");
     else if (resultType === "tie") playSound("push");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, resultType]);
+
+  // Win/blackjack get a bigger, punchier label+amount than a loss/push — the loss/tie sizing
+  // and spring are untouched (see the outer motion.div's own transition above), this only swaps
+  // out the inner label+amount row's own size/entrance/glow.
+  const isWin = resultType === "win" || resultType === "blackjack";
+  const isBlackjackResult = resultType === "blackjack";
 
   // rewardsSummary?.xpGained (the real, server-confirmed value, once its own delayed poll+diff
   // above resolves) always wins once it's there; predictedXpGained is only what fills this in
@@ -178,7 +188,7 @@ export default function RoundResultBanner({
   // Only win/blackjack ever carry XP (xpPerWin, server/routes.ts) — reserving this row's height
   // for loss/tie would leave a permanent empty gap under a result that was never going to grow
   // one.
-  const isXpEligible = resultType === "win" || resultType === "blackjack";
+  const isXpEligible = isWin;
 
   if (!resultType) return null;
   const displayedAmount = doubledTo ?? netResultAmount;
@@ -238,19 +248,35 @@ export default function RoundResultBanner({
               1+5"). */}
           <div className="relative w-full flex flex-col items-center">
           <ConfettiBurst
-            active={resultType === "win" || resultType === "blackjack"}
+            active={isWin}
             // Blackjack keeps its own extra flourish on top of the amount-scaled tier, same as
             // before this scaled by amount at all.
-            count={resultType === "blackjack" ? intensity.confettiCount + 8 : intensity.confettiCount}
+            count={isBlackjackResult ? intensity.confettiCount + 8 : intensity.confettiCount}
           />
-          <div className="flex items-center justify-center gap-2.5">
-            <span className="text-2xl font-bold text-white" data-testid="text-result-label">
+          {/* Win/blackjack get their own snappier, overshooting pop-in instead of just inheriting
+              the outer block's gentler spring (initial={{scale:0.85}} above) — a loss/push stays
+              on that original one, this is deliberately only for the moment worth flattering
+              (Stanislas, 2026-09-14: make the win itself read as a bigger deal, "genre le top 1
+              de fortnite"). key={resultType} so a win-after-win (a fresh reveal while this exact
+              row is already mounted) still replays the pop instead of sitting there static the
+              second time. */}
+          <motion.div
+            key={resultType}
+            className="flex items-center justify-center gap-2.5"
+            initial={isWin ? { scale: 0.5, opacity: 0 } : false}
+            animate={isWin ? { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 420, damping: 15 } } : undefined}
+          >
+            <span
+              className={`font-bold ${isWin ? "text-4xl" : "text-2xl"} ${isBlackjackResult ? "text-[#FFD452]" : "text-white"}`}
+              style={isWin ? { textShadow: isBlackjackResult ? "0 0 20px rgba(255,196,84,0.6)" : "0 0 18px rgba(52,211,153,0.5)" } : undefined}
+              data-testid="text-result-label"
+            >
               {t(LABEL_KEY[resultType])}
             </span>
-            <span className="text-white text-2xl font-light tabular-nums" data-testid="text-result-amount">
+            <span className={`text-white font-light tabular-nums ${isWin ? "text-4xl" : "text-2xl"}`} data-testid="text-result-amount">
               {amountText}
             </span>
-          </div>
+          </motion.div>
 
           {/* In normal flow (not absolute anymore) so its height counts toward the block
               classic.tsx centers as a whole — classic.tsx now centers this entire banner
