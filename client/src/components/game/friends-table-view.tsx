@@ -937,34 +937,32 @@ export default function FriendsTableView({
             // the instant a hand ends (Anatole, 2026-09-14). No Watch-to-2X here — that's a
             // Classic-solo-only offer, deliberately not brought over.
             //
-            // height: 128 (Anatole, 2026-09-14 — first version left this box sized to
-            // whichever content was mounted, so RoundResultBanner's own shorter footprint let
-            // this whole flex-shrink-0 block shrink, and the outer column's own justify-between
-            // then dumped ALL of that freed-up space into the gap above — between the dealer's
-            // total and this box — instead of it staying put here, reading as the result sitting
-            // hard against my own cards with a big empty gap above it instead of centered between
-            // the two). Fixed height (same value as Classic solo/House's own equivalent box,
-            // classic.tsx) keeps this block's total footprint — and so the gap above it — exactly
-            // the same regardless of which branch is showing, so `justify-center` below actually
-            // centers the visible content between the dealer's total and my own cards instead of
-            // just within whatever the content itself happened to need.
+            // ActionBar itself is deliberately untouched below — same plain, natural-height
+            // rendering as before any of this (Anatole, 2026-09-14: "je voulais pas que tu les
+            // touches, ces boutons-là"). Only the result branch gets its own fixed-height (128px,
+            // same value as Classic solo/House's own equivalent box) centering box — it used to
+            // be sized to whichever content it held, and RoundResultBanner's own shorter
+            // footprint let that box shrink, dumping the freed space into the outer column's
+            // justify-between gap above it instead of staying put here — reading as the result
+            // sitting hard against my own cards with a big empty gap above it, not centered.
             //
-            // Deliberately NOT `position: relative`/`absolute` here or on either branch below
-            // (mode="wait" means they're never both mounted at once, so there's nothing to
-            // overlap) — RoundResultBanner's own full-table "tap anywhere to dismiss" layer is an
-            // `absolute inset-0` that needs to skip past this box to the real positioned root
-            // (FriendsTableView's own outer div) to cover the whole table rather than just this
-            // band; giving this box its own position would trap that layer to just this height.
-            <div className="w-full" style={{ height: 128 }}>
-              <AnimatePresence mode="wait" initial={false}>
-                {showResult ? (
-                  <motion.div
-                    key="result"
-                    className="w-full h-full flex items-center justify-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
-                    exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-                  >
+            // Deliberately NOT `position: relative`/`absolute` on the result box or its motion.div
+            // (mode="wait" means actions/result are never both mounted at once, so there's
+            // nothing to overlap) — RoundResultBanner's own full-table "tap anywhere to dismiss"
+            // layer is an `absolute inset-0` that needs to skip past this box to the real
+            // positioned root (FriendsTableView's own outer div) to cover the whole table rather
+            // than just this band; giving this box its own position would trap that layer here.
+            <AnimatePresence mode="wait" initial={false}>
+              {showResult ? (
+                <motion.div
+                  key="result"
+                  className="w-full flex items-center justify-center"
+                  style={{ height: 128 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                  exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                >
+                  <div className="w-full flex flex-col items-center">
                     <RoundResultBanner
                       show={showResult && !hideResultBanner}
                       resultType={resultType}
@@ -983,40 +981,40 @@ export default function FriendsTableView({
                       // Plain flex child, not absolutely positioned: by the time this mounts,
                       // RoundResultBanner above has already faded out to `show=false` (see
                       // hideResultBanner) and renders nothing, so this is the only actual content
-                      // in the "result" flex column above and centers the same way it did —
-                      // nothing to overlap, same reasoning as House's own identical handoff
-                      // (classic.tsx: "the two never actually overlap in the DOM").
+                      // in this column and centers the same way it did — nothing to overlap, same
+                      // reasoning as House's own identical handoff (classic.tsx: "the two never
+                      // actually overlap in the DOM").
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
                         <WinStreakBar streak={friendsStreak} celebrationBonus={streakCelebrationBonus} />
                       </motion.div>
                     )}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="actions"
-                    className="w-full h-full flex flex-col justify-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
-                    exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-                  >
-                    <ActionBar
-                      className="w-full"
-                      animateEntrance={false}
-                      canHit={isMyTurn && !isBusy}
-                      canStand={isMyTurn && !isBusy}
-                      canDouble={isMyTurn && !isBusy && !!canDouble}
-                      onHit={() => actionMutation.mutate("hit")}
-                      onStand={() => actionMutation.mutate("stand")}
-                      onDouble={() => actionMutation.mutate("double")}
-                      canSwap={canSwap}
-                      swapDisabled={!swapClickable}
-                      onSwap={handleSwap}
-                      swapViaAd={!hasSwapTokens}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="actions"
+                  className="w-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                  exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                >
+                  <ActionBar
+                    className="w-full"
+                    animateEntrance={false}
+                    canHit={isMyTurn && !isBusy}
+                    canStand={isMyTurn && !isBusy}
+                    canDouble={isMyTurn && !isBusy && !!canDouble}
+                    onHit={() => actionMutation.mutate("hit")}
+                    onStand={() => actionMutation.mutate("stand")}
+                    onDouble={() => actionMutation.mutate("double")}
+                    canSwap={canSwap}
+                    swapDisabled={!swapClickable}
+                    onSwap={handleSwap}
+                    swapViaAd={!hasSwapTokens}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
           {renderSeat(bottomAbs, "bottom")}
         </div>
