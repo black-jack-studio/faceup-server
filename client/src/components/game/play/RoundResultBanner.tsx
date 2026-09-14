@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { gameService, type HandRewardsSnapshot } from "@/services/gameService";
 import { formatFullNumber } from "@/lib/formatUtils";
 import { playSound } from "@/lib/sound";
-import { triggerHapticSuccess } from "@/lib/haptics";
+import { triggerHapticSuccess, triggerHapticImpact, ImpactStyle } from "@/lib/haptics";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import type { GameResultType } from "../GameResultOverlay";
 import { getWinIntensity } from "@/lib/winIntensity";
@@ -167,7 +167,17 @@ export default function RoundResultBanner({
       // "à fond, chaque victoire" decision this matches (Stanislas, 2026-09-14).
       triggerHapticSuccess();
     }
-    else if (resultType === "loss") playSound("lose");
+    else if (resultType === "loss") {
+      playSound("lose");
+      // Delayed to land with the drop's own impact frame (the "thud" — see the label/amount
+      // motion.div below), not the instant the text starts falling — a haptic that fires before
+      // anything visible has happened reads as disconnected from what's on screen. No flash, no
+      // particles here on purpose — this result shouldn't feel rewarding, just genuinely felt
+      // instead of the flat, static text it was before (Stanislas, 2026-09-14: "un truc qui
+      // montre que t'as perdu quoi, tranquille").
+      const timer = setTimeout(() => triggerHapticImpact(ImpactStyle.Heavy), 230);
+      return () => clearTimeout(timer);
+    }
     else if (resultType === "tie") playSound("push");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, resultType]);
@@ -177,6 +187,7 @@ export default function RoundResultBanner({
   // out the inner label+amount row's own size/entrance/glow.
   const isWin = resultType === "win" || resultType === "blackjack";
   const isBlackjackResult = resultType === "blackjack";
+  const isLoss = resultType === "loss";
 
   // rewardsSummary?.xpGained (the real, server-confirmed value, once its own delayed poll+diff
   // above resolves) always wins once it's there; predictedXpGained is only what fills this in
@@ -192,6 +203,39 @@ export default function RoundResultBanner({
   if (!resultType) return null;
   const displayedAmount = doubledTo ?? netResultAmount;
   const amountText = `${displayedAmount > 0 ? "+" : ""}${formatFullNumber(displayedAmount)}`;
+
+  // The label+amount row's own entrance, one per result type — win keeps its existing
+  // overshooting pop (untouched). Loss gets a "thud": it drops in from above and lands with a
+  // quick squash/rebound instead of the old plain static render (no entrance at all), synced to
+  // the delayed heavy haptic above — felt, not rewarding, no flash or particles. Push (tie) gets
+  // a much lighter version of the same drop — just enough to not read as inert, nowhere near the
+  // weight of a loss (Stanislas, 2026-09-14, after rejecting a plain size bump as too flat:
+  // "un truc qui montre que t'as perdu quoi, tranquille").
+  const rowMotion = isWin
+    ? {
+        initial: { scale: 0.5, opacity: 0 },
+        animate: { scale: 1, opacity: 1, transition: { type: "spring" as const, stiffness: 420, damping: 15 } },
+      }
+    : isLoss
+    ? {
+        initial: { y: -46, opacity: 0, scaleX: 1, scaleY: 1 },
+        animate: {
+          y: [-46, 0, 6, 0],
+          opacity: 1,
+          scaleY: [1, 1, 0.85, 1],
+          scaleX: [1, 1, 1.08, 1],
+          transition: {
+            duration: 0.42,
+            times: [0, 0.55, 0.8, 1],
+            ease: ["easeIn", "easeOut", "easeOut"] as const,
+            opacity: { duration: 0.15 },
+          },
+        },
+      }
+    : {
+        initial: { y: -16, opacity: 0 },
+        animate: { y: 0, opacity: 1, transition: { duration: 0.3, ease: "easeOut" as const } },
+      };
 
   return (
     <>
@@ -260,11 +304,11 @@ export default function RoundResultBanner({
           <motion.div
             key={resultType}
             className="flex items-center justify-center gap-2.5"
-            initial={isWin ? { scale: 0.5, opacity: 0 } : false}
-            animate={isWin ? { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 420, damping: 15 } } : undefined}
+            initial={rowMotion.initial}
+            animate={rowMotion.animate}
           >
             <span
-              className={`font-bold ${isWin ? "text-4xl" : "text-2xl"} ${isBlackjackResult ? "text-[#FFD452]" : "text-white"}`}
+              className={`font-bold ${isWin ? "text-4xl" : "text-2xl"} ${isBlackjackResult ? "text-[#FFD452]" : isLoss ? "text-[#f87171]" : "text-white"}`}
               data-testid="text-result-label"
             >
               {t(LABEL_KEY[resultType])}
