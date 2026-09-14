@@ -305,15 +305,10 @@ export default function HandCards({
           // event instead of "my move, then the dealer's" — so this holds it back a bit longer
           // than the normal fallDelay + 0.4 formula gives every other card.
           //
-          // 0.9 -> 0.9 stayed put, but what it's measured from moved (Anatole, 2026-09-13,
-          // later the same day): a hit's own reveal used to wait a further 0.4s after landing
-          // before flipping (see the isInitialDealSlot branch of revealDelay below) — on top of
-          // the fall + flip themselves, that read as a second, separate delay right when the
-          // player most wants to see the result of their tap. Hit cards now flip the instant
-          // they land (revealDelay 0 in the branch below), finishing their fall+flip at 0.4
-          // (fall) or really 0.5 (the flip itself, which is what actually dominates) instead of
-          // the old 0.9. This dealer beat is recomputed to match: 0.5 (hit's new finish) + 0.4
-          // (the same ~400ms breathing room as before) = 0.9.
+          // 0.6 (Anatole, 2026-09-14): standing on a settled hand felt too slow waiting on the
+          // dealer to react — was 0.9 (0.5, the hit's own finish, + 0.4 breathing room). Trimmed
+          // the breathing room to 0.1 (0.5 + 0.1 = 0.6): still a distinct "my move, then the
+          // dealer's" beat, not instant, just shorter.
           const isDealerHoleCardSlot = isDealer && cardIndex === 1;
           // skipFall collapses fallDelay to 0 for both initial-slot cards (see above). A
           // per-card (cardIndex * 0.08) offset used to sit on top of this, meant to spread the
@@ -335,7 +330,7 @@ export default function HandCards({
           // fallDelay + 0.4/skipFall formula unchanged; that pacing is deliberate suspense, not
           // dead time on the back of a tap.
           const revealDelay = isDealerHoleCardSlot
-            ? 0.9
+            ? 0.6
             : isInitialDealSlot
               ? fallDelay + (skipFall ? 0.1 + skipFallStagger : 0.4)
               : 0;
