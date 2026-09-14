@@ -13,6 +13,11 @@ import { gameService } from "@/services/gameService";
 import { showRewardedAd } from "@/lib/admob";
 import { BetSlider } from "@/components/BetSlider";
 import ActionBar from "@/components/game/play/ActionBar";
+import RoundResultBanner from "./play/RoundResultBanner";
+import ResultDimOverlay from "./play/ResultDimOverlay";
+import WinCelebration from "./play/WinCelebration";
+import { getWinIntensity } from "@/lib/winIntensity";
+import type { GameResultType } from "./GameResultOverlay";
 import PlayingCard from "./card";
 import RollingTotal from "./play/RollingTotal";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
@@ -70,7 +75,21 @@ interface FriendsTableViewProps {
   // by friends-lobby.tsx, which holds this true just long enough for the flip to finish before
   // it actually swaps this whole screen out for the next betting round.
   forceHidden?: boolean;
+  // My own seat's settled-hand result, owned by friends-lobby.tsx (same split as Classic
+  // solo's showResult/resultType, classic.tsx): showResult false->true is what starts
+  // RoundResultBanner's entrance, taking over the ActionBar's own slot below (Anatole,
+  // 2026-09-14 — this used to be a separate bottom-sheet, GameResultOverlay, covering the
+  // whole table instead of replacing just the buttons in place).
+  showResult?: boolean;
+  resultType?: GameResultType;
+  netResultAmount?: number;
+  onDismissResult?: () => void;
 }
+
+// Play with Friends' own bet range (see friends-lobby.tsx's BetSlider max) — there's only one
+// stakes tier today, so this is a plain constant rather than something read off `table`, same
+// as Classic solo hardcodes its own ROOM.maxBet for the identical getWinIntensity call.
+const MAX_BET = 5000;
 
 function handTotal(cards: Card[]): number {
   let total = 0;
@@ -308,12 +327,29 @@ function MySeatCard({
   );
 }
 
-export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, swapTokens, winProbability, myPosition, emotesBySeat, forceHidden = false }: FriendsTableViewProps) {
+export default function FriendsTableView({
+  tableId,
+  table,
+  seats,
+  currentUserId,
+  balance,
+  swapTokens,
+  winProbability,
+  myPosition,
+  emotesBySeat,
+  forceHidden = false,
+  showResult = false,
+  resultType = null,
+  netResultAmount = 0,
+  onDismissResult = () => {},
+}: FriendsTableViewProps) {
   const { t } = useTranslation("gameplay");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [betValue, setBetValue] = useState(Math.min(25, Math.max(1, balance)));
   const { bottomAbs, leftAbs, rightAbs } = getSeatDisplayOrder(myPosition);
+  const isWinResult = resultType === "win" || resultType === "blackjack";
+  const winIntensity = getWinIntensity(netResultAmount, MAX_BET);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
 
@@ -851,7 +887,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   };
 
   return (
-    <div className="flex-1 w-full flex flex-col items-center pb-4 min-h-0">
+    // relative: the scoping root for ResultDimOverlay/WinCelebration below (both `absolute
+    // inset-0`) and for RoundResultBanner's own full-area "tap anywhere to dismiss" layer —
+    // same role Classic solo's tableRootRef plays in classic.tsx.
+    <div className="relative flex-1 w-full flex flex-col items-center pb-4 min-h-0">
       {/* Always flex-1 regardless of whether the "waiting for…" block below is showing — ceding
           it a slice of this area (as a previous version did) shrank the main play area and
           visibly shifted every seat/button up whenever it appeared. */}
@@ -876,26 +915,58 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             // used to hide the whole grid the instant the last seat acted and the table
             // flipped to "waiting" for the dealer's reveal — exactly when isMyTurn is already
             // false, so it just needs to stay mounted and dim rather than disappear.
-            // Shared ActionBar — same component Classic solo (House) uses, so Hit/Stand/
-            // Double/Swap always look and behave identically instead of two hand-rolled copies
-            // quietly drifting apart (this one used to have its own swap button with a glow
-            // ring and a token-count badge that Classic's never had). Surrender dropped
-            // entirely, matching Classic solo (see ActionBar's own onSurrender comment) — it's
-            // never passed here, so the slot simply doesn't render.
-            <ActionBar
-              className="w-full"
-              animateEntrance={false}
-              canHit={isMyTurn && !isBusy}
-              canStand={isMyTurn && !isBusy}
-              canDouble={isMyTurn && !isBusy && !!canDouble}
-              onHit={() => actionMutation.mutate("hit")}
-              onStand={() => actionMutation.mutate("stand")}
-              onDouble={() => actionMutation.mutate("double")}
-              canSwap={canSwap}
-              swapDisabled={!swapClickable}
-              onSwap={handleSwap}
-              swapViaAd={!hasSwapTokens}
-            />
+            // Crossfades between the shared ActionBar (same component Classic solo/House uses,
+            // so Hit/Stand/Double/Swap always look and behave identically instead of two
+            // hand-rolled copies quietly drifting apart) and RoundResultBanner, exactly in this
+            // same slot — mirrors House's own result banner (label+amount, XP row,
+            // challenge/rank row, same sounds/haptics) but anchored here instead of House's own
+            // mid-table slot, since the buttons are what the player's attention is already on
+            // the instant a hand ends (Anatole, 2026-09-14). No Watch-to-2X here — that's a
+            // Classic-solo-only offer, deliberately not brought over.
+            <AnimatePresence mode="wait" initial={false}>
+              {showResult ? (
+                <motion.div
+                  key="result"
+                  className="w-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                  exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                >
+                  <RoundResultBanner
+                    show={showResult}
+                    resultType={resultType}
+                    netResultAmount={netResultAmount}
+                    doubledTo={null}
+                    isDoubling={false}
+                    maxBet={MAX_BET}
+                    onDismiss={onDismissResult}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="actions"
+                  className="w-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                  exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                >
+                  <ActionBar
+                    className="w-full"
+                    animateEntrance={false}
+                    canHit={isMyTurn && !isBusy}
+                    canStand={isMyTurn && !isBusy}
+                    canDouble={isMyTurn && !isBusy && !!canDouble}
+                    onHit={() => actionMutation.mutate("hit")}
+                    onStand={() => actionMutation.mutate("stand")}
+                    onDouble={() => actionMutation.mutate("double")}
+                    canSwap={canSwap}
+                    swapDisabled={!swapClickable}
+                    onSwap={handleSwap}
+                    swapViaAd={!hasSwapTokens}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
           {renderSeat(bottomAbs, "bottom")}
         </div>
@@ -920,6 +991,18 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           </button>
         </motion.div>
       )}
+
+      <ResultDimOverlay show={showResult} />
+
+      {/* Full-screen confetti rain + flash — same component/behavior as House's own win
+          celebration (WinCelebration.tsx), root-level sibling for the same reason
+          ResultDimOverlay is: nothing buried in the seats/dealer/actions column above reliably
+          out-ranks its siblings otherwise. */}
+      <WinCelebration
+        active={showResult && isWinResult}
+        isBlackjack={resultType === "blackjack"}
+        count={winIntensity.rainCount}
+      />
     </div>
   );
 }
