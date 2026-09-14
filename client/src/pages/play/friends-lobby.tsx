@@ -16,6 +16,7 @@ import BottomSheet from "@/components/BottomSheet";
 import { BetSlider } from "@/components/BetSlider";
 import FriendsTableView from "@/components/game/friends-table-view";
 import type { GameResultType } from "@/components/game/GameResultOverlay";
+import { CELEBRATION_DURATION_MS } from "@/components/game/play/WinStreakBar";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
 import { formatFullNumber } from "@/lib/formatUtils";
@@ -59,6 +60,13 @@ interface FriendsLobbyProps {
   onClose?: () => void;
 }
 
+// How long the result banner (label+amount+XP) stays up before handing off, in the same slot,
+// to this table's own win streak bar — same values as House's identical handoff (classic.tsx's
+// RESULT_TO_STREAK_DELAY_MS/RESULT_EXIT_BUFFER_MS), kept independent constants here since this
+// screen's own streak is a wholly separate counter (see currentStreakFriends in schema.ts).
+const RESULT_TO_STREAK_DELAY_MS = 1500;
+const RESULT_EXIT_BUFFER_MS = 350;
+
 // Play with Friends. This same screen covers create/join, invite, and betting — only
 // "in_progress" (cards actually dealt) hands over to FriendsTableView. A fresh table starts
 // straight in "betting" (see createGameTable), and a settled hand's brief "waiting" status
@@ -90,6 +98,17 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
     type: Exclude<GameResultType, null>;
     netResultAmount: number;
   } | null>(null);
+  // This table's own independent win streak (see currentStreakFriends in schema.ts) — set
+  // alongside resultOverlay from the same settled hand's data (hand.streakAfter/streakBonus,
+  // storage.ts's settleTableAndCredit). Same split/handoff as House's displayedStreak/
+  // streakCelebrationBonus (classic.tsx).
+  const [friendsStreak, setFriendsStreak] = useState(0);
+  const [streakCelebrationBonus, setStreakCelebrationBonus] = useState<number | null>(null);
+  // Same-slot handoff timing as House's identical hideResultBanner/showStreakInResultSlot
+  // (classic.tsx) — RoundResultBanner shows first, then a beat later hands its slot over to
+  // WinStreakBar, both owned by FriendsTableView but timed from here.
+  const [hideResultBanner, setHideResultBanner] = useState(false);
+  const [showStreakInResultSlot, setShowStreakInResultSlot] = useState(false);
   // Snapshotted the instant I confirm my bet — my own balance right before this hand's stake
   // left it, so the result sheet has a fixed number to count from instead of re-reading the
   // live (possibly already-credited) store balance once the hand settles.
@@ -383,6 +402,10 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
           type,
           netResultAmount: ending - starting,
         });
+        // hand.streakAfter/streakBonus are always set by settleTableAndCredit (storage.ts) once
+        // this hand has actually settled — see their own comments in shared/blackjack-types.ts.
+        setFriendsStreak(hand.streakAfter ?? 0);
+        setStreakCelebrationBonus(hand.streakBonus ?? null);
         setShowResult(true);
       }, dealerRevealMs);
       return () => clearTimeout(timer);
@@ -393,6 +416,34 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myHandResult]);
+
+  // Same-slot handoff as House's identical effect (classic.tsx): a beat after the result starts
+  // showing, RoundResultBanner fades out (hideResultBanner) and, shortly after that, this table's
+  // own win streak bar fades in in its place (showStreakInResultSlot) — both reset back to false
+  // right when a NEW result starts showing, not when the old one is dismissed (see showResult's
+  // own gating in FriendsTableView's JSX for why that split doesn't need a separate reset here).
+  useEffect(() => {
+    if (!showResult) return;
+    setHideResultBanner(false);
+    setShowStreakInResultSlot(false);
+    const hideTimer = setTimeout(() => setHideResultBanner(true), RESULT_TO_STREAK_DELAY_MS);
+    const showBarTimer = setTimeout(() => setShowStreakInResultSlot(true), RESULT_TO_STREAK_DELAY_MS + RESULT_EXIT_BUFFER_MS);
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(showBarTimer);
+    };
+  }, [showResult]);
+
+  // Clears the celebration text once the bar's own minimum hold time is up, reverting it to its
+  // normal (freshly reset, 0-progress) countdown display — mirrors House's identical effect
+  // (classic.tsx), minus the coin-flight-duration comparison House's own version also waits on:
+  // this bar doesn't get a CoinBurst here (Anatole, 2026-09-14 — not asked for, and House's own
+  // burst needs a balance-display DOM ref this screen doesn't have an equivalent of).
+  useEffect(() => {
+    if (!showStreakInResultSlot || streakCelebrationBonus == null) return;
+    const timer = setTimeout(() => setStreakCelebrationBonus(null), CELEBRATION_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [showStreakInResultSlot, streakCelebrationBonus]);
 
   // Fired from RoundResultBanner's own tap-anywhere layer, now mounted inside FriendsTableView
   // (see its own comment) instead of GameResultOverlay's bottom-sheet backdrop. Same sequencing
@@ -581,7 +632,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                 animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
                 exit={{ opacity: 0, y: -12, transition: { duration: 0.2, ease: [0.55, 0, 0.85, 0.15] } }}
               >
-                <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} forceHidden={isRoundEnding} showResult={showResult} resultType={resultOverlay?.type ?? null} netResultAmount={resultOverlay?.netResultAmount ?? 0} onDismissResult={handleDismissResult} />
+                <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} forceHidden={isRoundEnding} showResult={showResult} resultType={resultOverlay?.type ?? null} netResultAmount={resultOverlay?.netResultAmount ?? 0} onDismissResult={handleDismissResult} friendsStreak={friendsStreak} streakCelebrationBonus={streakCelebrationBonus} hideResultBanner={hideResultBanner} showStreakInResultSlot={showStreakInResultSlot} />
               </motion.div>
             ) : (
               <motion.div

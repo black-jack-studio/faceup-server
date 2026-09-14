@@ -196,6 +196,11 @@ async function recordGameSettlement(
   // silently miss it once it's hit the reset threshold. Omitted entirely by call sites that
   // don't have one to offer (Play with Friends, forfeits — both already gated out below anyway).
   classicPeakStreak?: number,
+  // Play with Friends' own equivalent: true for the one hand that just completed its 3-win
+  // cycle (storage.ts's settleTableAndCredit already folded the bonus coins into this hand's
+  // own payout — see hand.streakBonus). Same XP-doubling treatment as completing the Classic
+  // solo streak below, just gated on this instead of classicPeakStreak.
+  friendsStreakCompleted?: boolean,
 ): Promise<void> {
   const totalPayout = playerHands.reduce((sum, h) => sum + (h.payout || 0), 0);
   const totalBet = playerHands.reduce((sum, h) => sum + h.bet, 0);
@@ -232,11 +237,17 @@ async function recordGameSettlement(
   // time this runs, which would silently zero out both this week's best-streak leaderboard entry
   // and this hand's own XP bonus. Falls back to the fresh-read for callers that don't have one to
   // offer (none currently do, both gated-out cases below skip this block entirely already).
-  let classicStreakXpMultiplier = 0;
+  let streakXpMultiplier = 0;
   if (mode === "classic" && !isMultiplayer && handsWon > 0) {
     const streak = classicPeakStreak ?? (await storage.getUser(userId))?.currentStreakClassic ?? 0;
     await storage.upsertClassicWeeklyStreak(userId, streak);
-    classicStreakXpMultiplier = streak >= STREAK_BONUS_THRESHOLD ? 1.0 : 0;
+    streakXpMultiplier = streak >= STREAK_BONUS_THRESHOLD ? 1.0 : 0;
+  }
+  // Play with Friends' own streak (independent counter, see currentStreakFriends in schema.ts)
+  // gets the same XP-doubling treatment — mutually exclusive with the branch above (isMultiplayer
+  // is never true at the same time as the Classic-solo branch's own condition).
+  if (isMultiplayer && friendsStreakCompleted) {
+    streakXpMultiplier = 1.0;
   }
 
   // Daily win-streak (consecutive calendar days, independent of the win-streak above — a
@@ -265,7 +276,7 @@ async function recordGameSettlement(
   const xpPerWin = 5;
   const blackjackXpBonus = 7; // on top of the normal win XP for that hand
   const baseXpGained = (handsWon * xpPerWin) + (blackjacks * blackjackXpBonus);
-  const xpGained = baseXpGained + Math.round(baseXpGained * classicStreakXpMultiplier);
+  const xpGained = baseXpGained + Math.round(baseXpGained * streakXpMultiplier);
   if (xpGained > 0) {
     await storage.addXPToUser(userId, xpGained);
   }
@@ -287,7 +298,9 @@ async function recordTableHandSettlement(tableId: string): Promise<void> {
         seat.userId,
         table.mode,
         [hand],
-        true // isMultiplayer — Play with Friends doesn't feed the Classic win-streak leaderboard
+        true, // isMultiplayer — Play with Friends doesn't feed the Classic win-streak leaderboard
+        undefined,
+        !!hand.streakBonus, // this seat's own independent streak (see storage.ts's settleTableAndCredit)
       );
     }
   } catch (error) {

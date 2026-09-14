@@ -94,6 +94,7 @@ export const users = pgTable("users", {
   bonusCoins: bigint("bonus_coins", { mode: "number" }).default(0), // Non-withdrawable rebate coins from losses
   allInLoseStreak: integer("all_in_lose_streak").default(0), // Track consecutive All-in losses
   currentStreakClassic: integer("current_streak_classic").default(0), // Current consecutive wins in solo Classic mode
+  currentStreakFriends: integer("current_streak_friends").default(0), // Current consecutive wins in Play with Friends — independent counter/bonus from currentStreakClassic, deliberately not merged into it (Anatole, 2026-09-14)
   currentDayStreak: integer("current_day_streak").default(0), // Consecutive calendar days (Paris time) with at least one Classic solo win
   longestDayStreak: integer("longest_day_streak").default(0), // Best currentDayStreak ever reached
   lastStreakWinDate: text("last_streak_win_date"), // Paris date ("YYYY-MM-DD") of the last day that counted toward currentDayStreak
