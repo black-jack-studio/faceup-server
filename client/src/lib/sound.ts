@@ -25,7 +25,7 @@ function getAudio(name: SoundName): HTMLAudioElement {
   if (!el) {
     el = new Audio(SOUND_FILES[name]);
     el.preload = "auto";
-    el.volume = 0.55;
+    el.volume = 0.35;
     pool.set(name, el);
   }
   return el;
@@ -68,7 +68,7 @@ export function playSound(
   try {
     el.currentTime = 0;
     el.playbackRate = options?.playbackRate ?? 1;
-    el.volume = Math.min(1, 0.55 + (options?.volumeBoost ?? 0));
+    el.volume = Math.min(1, 0.35 + (options?.volumeBoost ?? 0));
     el.play().catch(() => {});
   } catch {
     // Playback can throw synchronously in some WebViews if the element isn't ready yet —
