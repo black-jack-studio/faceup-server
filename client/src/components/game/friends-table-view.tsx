@@ -94,6 +94,14 @@ interface FriendsTableViewProps {
   streakCelebrationBonus?: number | null;
   hideResultBanner?: boolean;
   showStreakInResultSlot?: boolean;
+  // True from the instant the result is dismissed (showResult -> false) until the table fully
+  // resets for the next hand (forceHidden's own window, plus the brief exit-animation gap right
+  // before forceHidden itself actually flips true — see friends-lobby.tsx's handleDismissResult).
+  // Wider than forceHidden alone: without it, the dealer's own slot below briefly showed its
+  // real (still face-up) renderDealer() output again the instant the result's own exit animation
+  // finished, for however long was left until forceHidden caught up a beat later — reading as the
+  // dealer's cards popping back in before disappearing again (Anatole, 2026-09-14).
+  isDismissingResult?: boolean;
 }
 
 // Play with Friends' own bet range (see friends-lobby.tsx's BetSlider max) — there's only one
@@ -356,6 +364,7 @@ export default function FriendsTableView({
   streakCelebrationBonus = null,
   hideResultBanner = false,
   showStreakInResultSlot = false,
+  isDismissingResult = false,
 }: FriendsTableViewProps) {
   const { t } = useTranslation("gameplay");
   const { toast } = useToast();
@@ -1014,7 +1023,17 @@ export default function FriendsTableView({
                 animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
               >
-                {renderDealer()}
+                {/* forceHidden || isDismissingResult together cover the whole "just dismissed the
+                    result, resetting for the next hand" window (see isDismissingResult's own
+                    comment above for why forceHidden alone left a gap) — the dealer's cards
+                    already left along with the result a moment ago, so there's nothing left to
+                    flip back the way my own/friends' cards do. Rendering renderDealer() here
+                    instead would show its real (still face-up) dealerHand fully again for a beat,
+                    reading as the cards respawning right after they'd just disappeared (Anatole,
+                    2026-09-14: "je veux pas qu'elles respawn... t'as pas besoin de remettre les
+                    cartes"). Plain empty placeholder instead, same footprint renderDealer() itself
+                    uses for "no cards yet". */}
+                {forceHidden || isDismissingResult ? <div className="h-24" /> : renderDealer()}
               </motion.div>
             )}
           </AnimatePresence>
