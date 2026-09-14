@@ -876,7 +876,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             // used to hide the whole grid the instant the last seat acted and the table
             // flipped to "waiting" for the dealer's reveal — exactly when isMyTurn is already
             // false, so it just needs to stay mounted and dim rather than disappear.
-            // Shared ActionBar — same component Classic solo (Garage) uses, so Hit/Stand/
+            // Shared ActionBar — same component Classic solo (House) uses, so Hit/Stand/
             // Double/Swap always look and behave identically instead of two hand-rolled copies
             // quietly drifting apart (this one used to have its own swap button with a glow
             // ring and a token-count badge that Classic's never had). Surrender dropped

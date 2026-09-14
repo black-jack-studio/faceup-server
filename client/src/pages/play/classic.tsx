@@ -32,10 +32,10 @@ import { trackCoinsDepleted } from "@/lib/analytics";
 import { useToast } from "@/hooks/use-toast";
 
 // Entry-level room preset (lowest tapis, mise mini/maxi basse). Room names are meant to climb
-// in glamour as the tapis mini goes up (Garage -> ... -> Vegas -> Paris -> Monaco), not stay
+// in glamour as the tapis mini goes up (House -> ... -> Vegas -> Paris -> Monaco), not stay
 // "Las Vegas" at the very bottom rung. Not wired to a real room system yet — every table is
 // this same preset for now.
-const ROOM = { name: "Garage", minBet: 1, maxBet: 500 };
+const ROOM = { name: "House", minBet: 1, maxBet: 500 };
 
 // EXPERIMENTAL (Anatole, 2026-09-12) — test change: the result's auto-advance/streak-handoff
 // below now runs the same way in manual play as in auto-bet (2026-09-12, second pass — it
@@ -918,7 +918,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
               w-20 is load-bearing too, for the same reason h-10 is: the crossfading text is
               `absolute inset-0` (out of flow) so this box has no in-flow content left to size
               itself from — as a flex item with only ml-auto/text-right and no explicit width,
-              it collapsed to 0 width, clipping "Garage"/"1–500" and, once a hand starts, "Bet"/
+              it collapsed to 0 width, clipping "House"/"1–500" and, once a hand starts, "Bet"/
               the player's actual wager entirely invisible despite both being in the DOM. */}
           <div className="ml-auto text-right overflow-hidden relative h-10 w-20">
             <AnimatePresence mode={fadeMode} initial={false}>

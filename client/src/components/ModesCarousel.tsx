@@ -62,7 +62,7 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
       onSelectClassic();
       return;
     }
-    // "classic" (the entry-level "Garage" room) skips the separate betting screen entirely
+    // "classic" (the entry-level "House" room) skips the separate betting screen entirely
     // and goes straight to the single-page table. Direct-link fallback only — onSelectClassic
     // above is what Home actually uses to open it as an overlay.
     navigate(mode === "classic" ? "/play/classic" : `/play/${mode}`);
