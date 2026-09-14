@@ -94,6 +94,14 @@ interface FriendsTableViewProps {
   streakCelebrationBonus?: number | null;
   hideResultBanner?: boolean;
   showStreakInResultSlot?: boolean;
+  // True from the instant the result is dismissed (showResult -> false) until the table fully
+  // resets for the next hand (forceHidden's own window, plus the brief exit-animation gap right
+  // before forceHidden itself actually flips true — see friends-lobby.tsx's handleDismissResult).
+  // Wider than forceHidden alone: without it, the dealer's own slot below briefly showed its
+  // real (still face-up) renderDealer() output again the instant the result's own exit animation
+  // finished, for however long was left until forceHidden caught up a beat later — reading as the
+  // dealer's cards popping back in before disappearing again (Anatole, 2026-09-14).
+  isDismissingResult?: boolean;
 }
 
 // Play with Friends' own bet range (see friends-lobby.tsx's BetSlider max) — there's only one
@@ -356,6 +364,7 @@ export default function FriendsTableView({
   streakCelebrationBonus = null,
   hideResultBanner = false,
   showStreakInResultSlot = false,
+  isDismissingResult = false,
 }: FriendsTableViewProps) {
   const { t } = useTranslation("gameplay");
   const { toast } = useToast();
@@ -972,52 +981,43 @@ export default function FriendsTableView({
             down at the buttons (Anatole, 2026-09-14: swapped which end of the table shows the
             result, now that the buttons' own slot is doing something else — see below). */}
         <div className="flex-shrink-0 w-full flex flex-col items-center">
-          <AnimatePresence mode="wait" initial={false}>
-            {showResult ? (
-              <motion.div
-                key="dealer-result"
-                className="w-full flex flex-col items-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
-                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-              >
-                <RoundResultBanner
-                  show={showResult && !hideResultBanner}
-                  resultType={resultType}
-                  netResultAmount={netResultAmount}
-                  doubledTo={doubledTo}
-                  isDoubling={isDoubling}
-                  maxBet={MAX_BET}
-                  onDismiss={onDismissResult}
-                />
-                {/* Hands off to this same slot a beat after RoundResultBanner's own fade-out
-                    above (see hideResultBanner/showStreakInResultSlot timing, owned by
-                    friends-lobby.tsx) — this table's own independent win streak (see
-                    currentStreakFriends in schema.ts), same 3-win-cycle bar/flame/celebration as
-                    House's WinStreakBar, just not sharing House's own counter/leaderboard. */}
-                {showStreakInResultSlot && (friendsStreak > 0 || streakCelebrationBonus != null) && (
-                  // Plain flex child, not absolutely positioned: by the time this mounts,
-                  // RoundResultBanner above has already faded out to `show=false` (see
-                  // hideResultBanner) and renders nothing, so this is the only actual content in
-                  // this column — nothing to overlap, same reasoning as House's own identical
-                  // handoff (classic.tsx: "the two never actually overlap in the DOM").
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
-                    <WinStreakBar streak={friendsStreak} celebrationBonus={streakCelebrationBonus} />
-                  </motion.div>
-                )}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="dealer-cards"
-                className="w-full flex flex-col items-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
-                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-              >
-                {renderDealer()}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Plain conditional here, deliberately NOT AnimatePresence/motion.div the way the two
+              previous attempts at this had it (Anatole, 2026-09-14 — still broken both times: the
+              up-card, always index 0 and dealt already face-up, stuck showing its back every
+              hand). Both previous versions shared one thing this doesn't: the "dealer-cards"
+              branch was mounted by AnimatePresence's own exit-then-enter sequencing (mode="wait")
+              at the exact moment a fresh hand's cards need to play their own mount-time reveal
+              (card.tsx's initial->animate transition, index 0's only ever fires once) — removing
+              that outer sequencing isolates whether it was interfering with that inner one.
+              renderDealer() is always called (never swapped for a placeholder), same reasoning as
+              before: nothing here should unmount/remount the actual card elements. */}
+          {showResult ? (
+            <div className="w-full flex flex-col items-center">
+              <RoundResultBanner
+                show={showResult && !hideResultBanner}
+                resultType={resultType}
+                netResultAmount={netResultAmount}
+                doubledTo={doubledTo}
+                isDoubling={isDoubling}
+                maxBet={MAX_BET}
+                onDismiss={onDismissResult}
+              />
+              {/* Hands off to this same slot a beat after RoundResultBanner's own fade-out above
+                  (see hideResultBanner/showStreakInResultSlot timing, owned by friends-lobby.tsx)
+                  — this table's own independent win streak (see currentStreakFriends in
+                  schema.ts), same 3-win-cycle bar/flame/celebration as House's WinStreakBar, just
+                  not sharing House's own counter/leaderboard. */}
+              {showStreakInResultSlot && (friendsStreak > 0 || streakCelebrationBonus != null) && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
+                  <WinStreakBar streak={friendsStreak} celebrationBonus={streakCelebrationBonus} />
+                </motion.div>
+              )}
+            </div>
+          ) : (
+            <div className={`w-full flex flex-col items-center transition-opacity duration-200 ${forceHidden || isDismissingResult ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+              {renderDealer()}
+            </div>
+          )}
         </div>
 
         <div className="w-full flex-shrink-0 flex flex-col items-center gap-3">
