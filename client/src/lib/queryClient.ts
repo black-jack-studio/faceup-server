@@ -97,7 +97,10 @@ import { CapacitorCookies } from '@capacitor/core';
 // fires several queries in parallel on mount (challenges, stats, profile, coins), each
 // independently calling this — a short-lived cache collapses that burst into a single native
 // call instead of one per query. The cookie only ever changes on login/logout, both of which
-// invalidate it explicitly, so a small TTL here is purely about coalescing concurrent reads.
+// invalidate it explicitly, so this TTL is purely about coalescing reads between explicit
+// invalidations — 30s (rather than the ~2s this used to be) means almost every tap across the
+// app reuses the cached header instead of re-crossing the bridge, since most real gameplay/nav
+// taps are paced further apart than a couple of seconds.
 let cookieHeaderCache: { promise: Promise<Record<string, string>>; expires: number } | null = null;
 
 export function invalidateManualCookieCache() {
@@ -123,7 +126,7 @@ async function getManualCookieHeader(): Promise<Record<string, string>> {
     }
   })();
 
-  cookieHeaderCache = { promise, expires: now + 2000 };
+  cookieHeaderCache = { promise, expires: now + 30000 };
   return promise;
 }
 

@@ -14,6 +14,7 @@ import { initPurchases } from "@/lib/revenuecat";
 import { syncAnalyticsTrackingConsent, trackAppBackgrounded } from "@/lib/analytics";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
 import { playSound, unlockAudio } from "@/lib/sound";
+import { fetchCSRFToken } from "@/lib/queryClient";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useTranslation } from "react-i18next";
 import { App as CapacitorApp } from "@capacitor/app";
@@ -445,6 +446,11 @@ function App() {
     // shouldn't reject, but if it somehow does, the splash must still be
     // told the check is over instead of blocking the whole app forever.
     initializeAuth().finally(() => setAuthReady(true));
+    // Pre-warms the CSRF token cache (see fetchCSRFToken's own comment) so the very first
+    // Hit/bet/etc. of the session doesn't pay for that round trip on top of the actual action —
+    // fire-and-forget, sendAction's own apiRequest call falls back to fetching it lazily if
+    // this hasn't resolved yet by the time something needs it.
+    fetchCSRFToken().catch(() => {});
     initAdMob();
     // Both of these only *peek* at whatever the ATT status already is — they never prompt.
     // The native ATT dialog is requested exclusively from the custom TrackingPermissionPopup on
