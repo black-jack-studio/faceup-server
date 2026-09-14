@@ -1040,6 +1040,25 @@ export default function FriendsTableView({
         </motion.div>
       )}
 
+      {/* Root-level "tap anywhere to dismiss" hit target — RoundResultBanner ships its own
+          identical layer, but that one is nested several motion.div/AnimatePresence levels deep
+          inside the actions/result crossfade box below, and relies on every one of those staying
+          plain (no position/transform of their own) for its `absolute inset-0` to bubble all the
+          way up to this component's own `relative` root instead of just the crossfade box's
+          128px band. That held for Classic solo (classic.tsx mounts RoundResultBanner just one
+          plain div below its own root) but evidently didn't hold reliably here (Anatole,
+          2026-09-14 — a Play with Friends loss showed the result, dimmed the table, and then
+          didn't respond to any tap at all, softlocking the hand). This layer doesn't depend on
+          that nesting at all — it's a direct child of this same root FriendsTableView already
+          uses for ResultDimOverlay/WinCelebration just below, so it's guaranteed to cover the
+          whole table regardless of what changes inside the crossfade box above.
+          pointer-events-none when !showResult so it never intercepts ordinary table taps. */}
+      <div
+        className={`absolute inset-0 z-[25] ${showResult ? "" : "pointer-events-none"}`}
+        onClick={showResult ? onDismissResult : undefined}
+        data-testid="button-dismiss-friends-result"
+      />
+
       <ResultDimOverlay show={showResult} />
 
       {/* Full-screen confetti rain + flash — same component/behavior as House's own win
