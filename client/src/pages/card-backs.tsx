@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "@/icons";
@@ -144,6 +144,27 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
     enabled: !!user,
     select: (response: any) => response?.data || null,
   });
+
+  // Warms the browser cache for BOTH theme variants of every card back shown below, the moment
+  // this page's data arrives -- not just whichever one the pastille currently shows. Without
+  // this, tapping the pastille swaps each <img>'s src to a URL the browser has never fetched,
+  // and different PNGs (they range ~160-410KB) finish downloading at different times: cards
+  // flip one by one instead of all together, reading as a bug rather than a clean toggle. Once
+  // both are cached here, the actual swap later is instant (no network round trip).
+  useEffect(() => {
+    const urls = new Set<string>([
+      "/card-backs/classic-default.png",
+      "/card-backs/classic-default-black.png",
+    ]);
+    userCardBacks.forEach((ucb: UserCardBack) => {
+      if (ucb.cardBack.imageUrl) urls.add(ucb.cardBack.imageUrl);
+      if (ucb.cardBack.imageUrlBlack) urls.add(ucb.cardBack.imageUrlBlack);
+    });
+    urls.forEach((url) => {
+      const img = new Image();
+      img.src = url;
+    });
+  }, [userCardBacks]);
 
   // Set immediately on tap so the blue ring jumps to the new card in the same frame as the
   // click, instead of waiting on the PATCH round-trip below — currentSelectedId reads this
