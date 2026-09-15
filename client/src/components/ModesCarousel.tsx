@@ -4,8 +4,12 @@ import { useTranslation } from "react-i18next";
 import { useGameStore, type GameMode } from "@/store/game-store";
 import ModeCard from "./ModeCard";
 import houseImage from '@assets/house_3d.png';
-import calendarImage from '@assets/calendar_3d_1787179981404.png';
 import bicepsImage from '@assets/flexed_biceps_3d_default.png';
+import beerMugImage from '@assets/beer_mug_3d.png';
+import discoBallImage from '@assets/disco_ball_3d.png';
+import slotMachineImage from '@assets/slot_machine_3d_1788544779000.png';
+import citySkylineImage from '@assets/city_skyline_3d.png';
+import desertIslandImage from '@assets/desert_island_3d.png';
 
 // title/subtitle are i18next keys (looked up against the "modesCarousel" namespace when
 // rendered below), not literal display text — this array lives outside the component so it
@@ -38,7 +42,7 @@ const modeData = [
     mode: "bar",
     titleKey: "bar.title",
     subtitleKey: "bar.subtitle",
-    icon: calendarImage,
+    icon: beerMugImage,
     gradient: "bg-gradient-to-br from-amber-200 via-orange-100 to-yellow-50",
     clickable: false,
   },
@@ -46,7 +50,7 @@ const modeData = [
     mode: "club",
     titleKey: "club.title",
     subtitleKey: "club.subtitle",
-    icon: calendarImage,
+    icon: discoBallImage,
     gradient: "bg-gradient-to-br from-fuchsia-200 via-pink-100 to-purple-100",
     clickable: false,
   },
@@ -54,7 +58,7 @@ const modeData = [
     mode: "vegas",
     titleKey: "vegas.title",
     subtitleKey: "vegas.subtitle",
-    icon: calendarImage,
+    icon: slotMachineImage,
     gradient: "bg-gradient-to-br from-red-200 via-orange-100 to-yellow-100",
     clickable: false,
   },
@@ -62,7 +66,7 @@ const modeData = [
     mode: "penthouse",
     titleKey: "penthouse.title",
     subtitleKey: "penthouse.subtitle",
-    icon: calendarImage,
+    icon: citySkylineImage,
     gradient: "bg-gradient-to-br from-sky-200 via-cyan-100 to-slate-100",
     clickable: false,
   },
@@ -70,7 +74,7 @@ const modeData = [
     mode: "monaco",
     titleKey: "monaco.title",
     subtitleKey: "monaco.subtitle",
-    icon: calendarImage,
+    icon: desertIslandImage,
     gradient: "bg-gradient-to-br from-amber-300 via-yellow-100 to-rose-100",
     clickable: false,
   },
