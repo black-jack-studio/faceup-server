@@ -30,7 +30,7 @@ import { getWinIntensity } from "@/lib/winIntensity";
 import { COIN_STAGGER, COIN_FLIGHT_DURATION } from "@/lib/coinFlightTiming";
 import { trackCoinsDepleted } from "@/lib/analytics";
 import { useToast } from "@/hooks/use-toast";
-import { triggerHapticImpact } from "@/lib/haptics";
+import { triggerHapticImpact, ImpactStyle } from "@/lib/haptics";
 
 // Entry-level room preset (lowest tapis, mise mini/maxi basse). Room names are meant to climb
 // in glamour as the tapis mini goes up (House -> ... -> Vegas -> Paris -> Monaco), not stay
@@ -47,6 +47,20 @@ const AUTO_MODE_HOLD_MS = 1000;
 // as barely-there at the start of the hold and a real vibration by the time auto mode fires,
 // rather than one fixed-intensity wobble the whole way through.
 const SHAKE_X_KEYFRAMES = [0, -1, 1, -1, 1, -2, 2, -2, 2, -3, 3, -3, 3, -4, 4, -4, 4, -5, 5, -5, 5, 0];
+
+// Haptic pulses fired while the BET button is held, ramping alongside SHAKE_X_KEYFRAMES' own
+// amplitude tiers (Anatole, 2026-09-15: wanted the hold to actually build up physically, not
+// just visually) — Capacitor's impact haptic only has 3 discrete styles (no continuous
+// intensity), so the ramp is felt as pulses growing stronger and closer together rather than
+// one continuously intensifying buzz. atMs values are fractions of AUTO_MODE_HOLD_MS so this
+// still lines up correctly if that duration ever changes again (see its own git history).
+const HOLD_HAPTIC_SCHEDULE: { atMs: number; style: ImpactStyle }[] = [
+  { atMs: AUTO_MODE_HOLD_MS * 0, style: ImpactStyle.Light },
+  { atMs: AUTO_MODE_HOLD_MS * 0.2, style: ImpactStyle.Light },
+  { atMs: AUTO_MODE_HOLD_MS * 0.4, style: ImpactStyle.Medium },
+  { atMs: AUTO_MODE_HOLD_MS * 0.6, style: ImpactStyle.Medium },
+  { atMs: AUTO_MODE_HOLD_MS * 0.8, style: ImpactStyle.Heavy },
+];
 
 // EXPERIMENTAL (Anatole, 2026-09-12) — test change: the result's auto-advance/streak-handoff
 // below now runs the same way in manual play as in auto-bet (2026-09-12, second pass — it
@@ -397,6 +411,10 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // so the click that follows the eventual pointerup doesn't fire a second one.
   const betPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const betPressFiredRef = useRef(false);
+  // Pending HOLD_HAPTIC_SCHEDULE timers for the current hold — cleared alongside
+  // betPressTimerRef on an early release so an interrupted hold doesn't keep firing haptics
+  // after the finger's already lifted.
+  const betPressHapticTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   // Drives the button's own shake (see its motion.button below) for exactly the span of the
   // hold — released early (tap) or cut short by the timer firing, either way this is what
   // stops it.
@@ -405,10 +423,13 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     if (isPlacingBet || balance < currentBet) return;
     betPressFiredRef.current = false;
     setIsHoldingBet(true);
+    betPressHapticTimersRef.current = HOLD_HAPTIC_SCHEDULE.map(({ atMs, style }) =>
+      setTimeout(() => triggerHapticImpact(style), atMs)
+    );
     betPressTimerRef.current = setTimeout(() => {
       betPressFiredRef.current = true;
       setIsHoldingBet(false);
-      triggerHapticImpact();
+      triggerHapticImpact(ImpactStyle.Heavy);
       setAutoBetEnabled(true);
       handlePlaceBet();
     }, AUTO_MODE_HOLD_MS);
@@ -419,6 +440,8 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
       clearTimeout(betPressTimerRef.current);
       betPressTimerRef.current = null;
     }
+    betPressHapticTimersRef.current.forEach(clearTimeout);
+    betPressHapticTimersRef.current = [];
   };
 
   // isAuto marks a call fired by handleDismissResult's own auto-bet re-fire rather than the
