@@ -27,10 +27,14 @@ const SLIDES = [
 
 const SLIDE_DURATION_MS = 3000;
 
-// Same on-screen footprint the old Figma phone mockup used to reserve (its frame was
-// MOCK_WIDTH=172 wide at this same FRAME.h/FRAME.w aspect ratio) — height fixed, width auto
-// from each slide's own aspect ratio so nothing stretches.
+// Same on-screen height the old Figma phone mockup used to reserve (its frame was
+// MOCK_WIDTH=172 wide at that FRAME.h/FRAME.w aspect ratio). Width is computed explicitly
+// from the new renders' own 1024x1536 aspect ratio rather than left as CSS `width: auto` on
+// an absolutely-positioned <img> — that depends on the replaced-element auto-sizing-from-
+// intrinsic-ratio algorithm, which iOS's WKWebView (the app's real runtime) doesn't reliably
+// apply, and silently collapsed the image to zero width there.
 const MOCK_HEIGHT = 172 * (2642 / 1280);
+const MOCK_WIDTH = MOCK_HEIGHT * (1024 / 1536);
 
 export default function Welcome() {
   const { t } = useTranslation("welcome");
@@ -80,7 +84,7 @@ export default function Welcome() {
       {/* Real in-app screenshots (already full device mockup renders) crossfading in place —
           no frame of our own drawn on top. */}
       <div className="flex justify-center px-6">
-        <div className="relative" style={{ height: MOCK_HEIGHT }}>
+        <div className="relative" style={{ width: MOCK_WIDTH, height: MOCK_HEIGHT }}>
           {/* Plain CSS opacity crossfade - a JS-driven (framer-motion) tween can get stuck
               mid-fade if the tab isn't actively focused/painting every frame; a CSS
               transition is driven by the compositor instead and doesn't have that problem. */}
@@ -89,7 +93,7 @@ export default function Welcome() {
               key={s.image}
               src={s.image}
               alt=""
-              className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-auto object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.85)]"
+              className="absolute inset-0 w-full h-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.85)]"
               style={{
                 opacity: i === slide ? 1 : 0,
                 transition: "opacity 0.5s ease",
