@@ -973,10 +973,10 @@ export default function FriendsTableView({
           this whole block's own screen-swap exit animation covered them a beat later, reading as
           a flash of cards popping in and back out (Anatole, 2026-09-15). Fading this block itself
           out in the same instant means both fades run together instead of sequentially. Duration
-          matches the screen-level crossfade below (friends-lobby.tsx's own table<->bet transition,
-          also 500ms as of 2026-09-15 — Anatole wanted the whole handoff slower and more of an
-          actual dissolve, not a quick snap) so neither finishes noticeably ahead of the other. */}
-      <div className={`w-full flex-1 flex flex-col items-center justify-between min-h-0 transition-opacity duration-500 ${isDismissingResult ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+          matches the screen-level crossfade below (friends-lobby.tsx's own table<->bet transition
+          — 300ms as of 2026-09-15, copied verbatim from Lucky Reels' own fade in/out of Shop, see
+          that transition's own comment) so neither finishes noticeably ahead of the other. */}
+      <div className={`w-full flex-1 flex flex-col items-center justify-between min-h-0 transition-opacity duration-300 ${isDismissingResult ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
         <div className={`w-full flex items-start px-2 ${soloFriendSlot ? "justify-center" : "justify-between"}`}>
           {soloFriendSlot === "left" ? renderSeat(leftAbs, "left") : soloFriendSlot === "right" ? renderSeat(rightAbs, "right") : (
             <>

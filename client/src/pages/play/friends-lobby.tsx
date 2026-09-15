@@ -498,10 +498,10 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       // instead of looking ready to bet the instant I alone dismiss. Its own onSuccess invalidates
       // this table's query, and that refetch landing (and re-rendering the freshly-mounted bet
       // screen with new data) mid-crossfade would compete with the swap's own animation frames for
-      // main-thread time — delayed here past the crossfade's own duration (bumped alongside it,
-      // 350ms -> 550ms, when that duration went from ~320ms to 500ms) so it doesn't.
+      // main-thread time — delayed here past the crossfade's own duration (300ms, see that
+      // transition's own comment) so it doesn't.
       acknowledgeMutation.mutate();
-    }, 550);
+    }, 350);
   };
 
   // Auto-advances the result away on its own, same as House (Anatole, 2026-09-14: "pas besoin de
@@ -655,32 +655,24 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
         ) : (
-          // ResultDimOverlay (rendered inside FriendsTableView, still mounted throughout the
-          // dismiss) covers this swap while it's up, so what's actually seen crossfading is its
-          // own dim fading out into whichever screen was underneath the whole time — this is
-          // what keeps that reveal from reading as an abrupt jump cut instead of one continuous
-          // motion. mode="popLayout" (Anatole, 2026-09-15: mode="wait" read as jerky — a full
-          // stop while the outgoing screen finished its own exit before the next one even started
-          // animating in, instead of one continuous motion). popLayout takes the exiting element
-          // out of layout flow (absolutely positioned in place) the instant it starts exiting, so
-          // the incoming screen can start its own enter animation immediately and the two
-          // crossfade together — without the layout jolt a plain overlapping (mode="sync") swap
-          // would cause between the table and bet screens' very different heights, which is what
-          // mode="wait" was originally chosen to avoid. Exit now shares the enter's own duration/
-          // easing (previously a quicker, sharper ease-out fitted for finishing before the enter
-          // began) so the crossfade reads as one symmetric motion instead of two mismatched ones.
-          // Duration bumped from 0.32s to 0.5s and the y travel eased down from 12px to 6px
-          // (Anatole, 2026-09-15: "trop rapide, pas assez fondu" — wanted this handoff read as a
-          // slower dissolve, not mostly a slide) — matches FriendsTableView's own isDismissingResult
-          // fade (also 500ms as of this change) so neither half of the crossfade outruns the other.
+          // Plain opacity crossfade now, no y movement (Anatole, 2026-09-15: wanted this exact
+          // handoff to match Lucky Reels' own fade in/out of Shop — see App.tsx's
+          // wheel-of-fortune-overlay motion.div: initial/animate/exit opacity only,
+          // transition={{duration:0.3}}, "nothing sliding" per that block's own comment). Copied
+          // verbatim here rather than approximated. mode="popLayout" is kept (a structural
+          // necessity this case has and Lucky Reels doesn't: that overlay is a fixed full-screen
+          // layer fading over a Shop that never moves underneath it, while this swaps two
+          // differently-sized blocks in and out of the same flex slot — mode="wait" read as jerky
+          // there, see this block's own earlier history) but the fade values themselves are now
+          // identical to Lucky Reels'.
           <AnimatePresence mode="popLayout" initial={false}>
             {showTableView ? (
               <motion.div
                 key="table"
                 className="flex-1 w-full min-h-0 flex flex-col"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}
-                exit={{ opacity: 0, y: -6, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.3 } }}
+                exit={{ opacity: 0, transition: { duration: 0.3 } }}
               >
                 <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} showResult={showResult} resultType={resultOverlay?.type ?? null} netResultAmount={resultOverlay?.netResultAmount ?? 0} onDismissResult={handleDismissResult} friendsStreak={friendsStreak} streakCelebrationBonus={streakCelebrationBonus} hideResultBanner={hideResultBanner} showStreakInResultSlot={showStreakInResultSlot} isDismissingResult={isDismissingResult} />
               </motion.div>
@@ -688,9 +680,9 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
               <motion.div
                 key="bet"
                 className="flex-1 flex flex-col items-center min-h-0 pt-2 gap-6"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}
-                exit={{ opacity: 0, y: -6, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.3 } }}
+                exit={{ opacity: 0, transition: { duration: 0.3 } }}
               >
                 {/* The "triangle" — both side seats plus my own avatar — as a group in whatever
                     space is left above the bet bar, instead of spread across the whole screen (with
