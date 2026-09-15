@@ -66,13 +66,15 @@ interface FriendsLobbyProps {
 // screen's own streak is a wholly separate counter (see currentStreakFriends in schema.ts).
 const RESULT_TO_STREAK_DELAY_MS = 1500;
 const RESULT_EXIT_BUFFER_MS = 350;
-// Auto-advances the result away without needing a tap — same values as House's identical
-// AUTO_DISMISS_MS/AUTO_DISMISS_QUICK_MS (classic.tsx). A win gets the long delay (worth
-// lingering on), a loss/push the quick one (nothing left to wait for) — House's own version also
+// Auto-advances the result away without needing a tap. A win gets the long delay (worth
+// lingering on), a loss/push a shorter one (nothing left to wait for) — House's own version also
 // branches on whether Watch-to-2X is offered, which doesn't apply here (see friends-table-view's
 // own comment on why that offer isn't brought over), so this only branches on the result itself.
+// AUTO_DISMISS_QUICK_MS deliberately isn't House's own 1000ms (classic.tsx's identical constant):
+// at 1000ms this screen's own banner was gone before the player had really registered it (Anatole,
+// 2026-09-15) — bumped just enough to read as a beat, not the long win-side hold.
 const AUTO_DISMISS_MS = 3250;
-const AUTO_DISMISS_QUICK_MS = 1000;
+const AUTO_DISMISS_QUICK_MS = 1800;
 
 // Play with Friends. This same screen covers create/join, invite, and betting — only
 // "in_progress" (cards actually dealt) hands over to FriendsTableView. A fresh table starts
@@ -157,13 +159,6 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   // same split as Classic solo's showResult/resultType (classic.tsx) — clearing the data in
   // the same tick as the dismiss would skip that exit animation entirely instead of playing it.
   const [showResult, setShowResult] = useState(false);
-  // Round end: mirrors Classic solo's isRoundEnding (classic.tsx) — held true just long
-  // enough for every dealt card on the table to flip back to its card-back face (see
-  // FriendsTableView's forceHidden) before this screen actually swaps over to the next betting
-  // round, instead of the table's cards vanishing mid-face-up the instant the result sheet
-  // closes.
-  const [isRoundEnding, setIsRoundEnding] = useState(false);
-
   // Live emotes: userId -> the emote currently showing above their avatar. Keyed by userId
   // (not stored per-seat) since it's purely a display overlay — FriendsTableView looks it up
   // per seat by that seat's own userId. `key` is a fresh value per send so re-tapping the same
@@ -464,42 +459,32 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   }, [showStreakInResultSlot, streakCelebrationBonus]);
 
   // Fired from RoundResultBanner's own tap-anywhere layer, now mounted inside FriendsTableView
-  // (see its own comment) instead of GameResultOverlay's bottom-sheet backdrop. Same sequencing
-  // as Classic solo's identical handleDismissResult (classic.tsx): wait for the banner's own
-  // fade-out (200ms, matches FriendsTableView's crossfade exit) before flipping the table's
-  // cards back — starting that flip in the same instant the banner began fading would cut its
-  // exit visually short instead of letting it actually play.
+  // (see its own comment) instead of GameResultOverlay's bottom-sheet backdrop. Waits for the
+  // banner/streak bar's own fade-out (200ms, matches FriendsTableView's crossfade exit) before
+  // swapping straight back to the betting screen — deliberately no intermediate step that flips
+  // the table's cards back to their card-back face first (Anatole, 2026-09-15: wanted the cut
+  // from streak bar to betting screen direct, without watching every hand's cards flip over
+  // again first). The screen swap itself (showTableView's own AnimatePresence in the JSX below)
+  // already crossfades table→bet, so this doesn't read as an abrupt jump cut.
   const handleDismissResult = () => {
     if (dismissedResultRef.current) return;
     dismissedResultRef.current = true;
     setShowResult(false);
     setIsDismissingResult(true);
     setTimeout(() => {
-      // Flips every dealt card on the table back to its card-back face, in place — see
-      // FriendsTableView's forceHidden and card.tsx's hideDelay. The underlying table/seat data
-      // is deliberately left alone here so the reveal underneath the closing result banner
-      // already shows the cards turning over, instead of this screen swapping straight to the
-      // next betting round mid-face-up.
-      setIsRoundEnding(true);
-      // Same constant as Classic solo: hideDelay staggers 60ms per card index and the flip
-      // itself takes 500ms, plus a small buffer.
-      const flipDurationMs = 60 + 500 + 100;
-      setTimeout(() => {
-        setResultOverlay(null);
-        setReviewingLastHand(false);
-        // Sends me back to the betting screen right away — doesn't wait on a friend also
-        // dismissing their own sheet (see dismissedResult above). The next betting round isn't
-        // opened from here at all: placeTableBet itself lazily opens it the moment anyone
-        // actually places a bet (see its comment in storage.ts), so nobody's dismissal ever
-        // forces the table to move on before someone else still reviewing their own result has
-        // had a chance to see it.
-        setDismissedResult(true);
-        setIsRoundEnding(false);
-        setIsDismissingResult(false);
-        // Lets the bet bar tell "everyone's back" from "just me" (see allSeatsAcknowledged
-        // below) instead of looking ready to bet the instant I alone dismiss.
-        acknowledgeMutation.mutate();
-      }, flipDurationMs);
+      setResultOverlay(null);
+      setReviewingLastHand(false);
+      // Sends me back to the betting screen right away — doesn't wait on a friend also
+      // dismissing their own sheet (see dismissedResult above). The next betting round isn't
+      // opened from here at all: placeTableBet itself lazily opens it the moment anyone
+      // actually places a bet (see its comment in storage.ts), so nobody's dismissal ever
+      // forces the table to move on before someone else still reviewing their own result has
+      // had a chance to see it.
+      setDismissedResult(true);
+      setIsDismissingResult(false);
+      // Lets the bet bar tell "everyone's back" from "just me" (see allSeatsAcknowledged
+      // below) instead of looking ready to bet the instant I alone dismiss.
+      acknowledgeMutation.mutate();
     }, 200);
   };
 
@@ -671,7 +656,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                 animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
                 exit={{ opacity: 0, y: -12, transition: { duration: 0.2, ease: [0.55, 0, 0.85, 0.15] } }}
               >
-                <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} forceHidden={isRoundEnding} showResult={showResult} resultType={resultOverlay?.type ?? null} netResultAmount={resultOverlay?.netResultAmount ?? 0} onDismissResult={handleDismissResult} friendsStreak={friendsStreak} streakCelebrationBonus={streakCelebrationBonus} hideResultBanner={hideResultBanner} showStreakInResultSlot={showStreakInResultSlot} isDismissingResult={isDismissingResult} />
+                <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} showResult={showResult} resultType={resultOverlay?.type ?? null} netResultAmount={resultOverlay?.netResultAmount ?? 0} onDismissResult={handleDismissResult} friendsStreak={friendsStreak} streakCelebrationBonus={streakCelebrationBonus} hideResultBanner={hideResultBanner} showStreakInResultSlot={showStreakInResultSlot} isDismissingResult={isDismissingResult} />
               </motion.div>
             ) : (
               <motion.div
