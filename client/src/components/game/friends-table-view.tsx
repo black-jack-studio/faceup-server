@@ -966,7 +966,14 @@ export default function FriendsTableView({
       {/* Always flex-1 regardless of whether the "waiting for…" block below is showing — ceding
           it a slice of this area (as a previous version did) shrank the main play area and
           visibly shifted every seat/button up whenever it appeared. */}
-      <div className="w-full flex-1 flex flex-col items-center justify-between min-h-0">
+      {/* transition-opacity here (not just on the dealer's own slot below) is what actually hides
+          my own and the friends' seats' cards during the post-result dismiss window — without it,
+          ResultDimOverlay fading its dim away (the instant showResult flips false, same tick as
+          isDismissingResult flipping true) briefly revealed those cards at full brightness before
+          this whole block's own screen-swap exit animation covered them a beat later, reading as
+          a flash of cards popping in and back out (Anatole, 2026-09-15). Fading this block itself
+          out in the same instant means both fades run together instead of sequentially. */}
+      <div className={`w-full flex-1 flex flex-col items-center justify-between min-h-0 transition-opacity duration-200 ${isDismissingResult ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
         <div className={`w-full flex items-start px-2 ${soloFriendSlot ? "justify-center" : "justify-between"}`}>
           {soloFriendSlot === "left" ? renderSeat(leftAbs, "left") : soloFriendSlot === "right" ? renderSeat(rightAbs, "right") : (
             <>
