@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AnimatePresence, motion } from "framer-motion";
+import PhoneMockupFrame from "./PhoneMockupFrame";
 import SkipLink from "./SkipLink";
 import { trackOnboardingStarted, trackOnboardingStepViewed } from "@/lib/analytics";
 import stepModeImg from "@assets/first-run/step-mode.png";
@@ -9,10 +9,9 @@ import stepFriendsImg from "@assets/first-run/step-friends.png";
 
 const TOTAL_STEPS = 4;
 
-// Index i maps directly to step i — index 0 (the welcome step) never shows an image, so
-// STEP_IMAGES[0] is always unused; only indices 1-3 are ever read. Already full device mockup
-// renders (bezel baked into the image itself, transparent background) — shown as-is, no
-// PhoneMockupFrame/bezel overlay of our own on top (Anatole, 2026-09-15: "pas de cadre blanc").
+// Index i maps directly to step i — index 0 (the welcome step) never shows a phone mockup, so
+// STEP_IMAGES[0] is always unused; only indices 1-3 are ever read. Real device captures
+// (1170x2532, the exact size PhoneMockupFrame's screen cutout expects — no cropping needed).
 const STEP_IMAGES: (string | null)[] = [null, stepModeImg, stepLeaderboardImg, stepFriendsImg];
 
 interface OnboardingWalkthroughProps {
@@ -56,24 +55,7 @@ export default function OnboardingWalkthrough({ onCommencer, onSkip }: Onboardin
           on-screen position never shifts between them. Only the welcome step drops the phone
           and centers its title alone. */}
       <div className="flex-1 flex flex-col items-center justify-center gap-8 min-h-0">
-        {/* Fixed height, width auto from the image's own aspect ratio (object-contain) — same
-            footprint PhoneMockupFrame used to reserve, just without its bezel overlay on top. */}
-        {!isWelcomeStep && (
-          <div className="relative mx-auto" style={{ height: 355 }}>
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={STEP_IMAGES[step]}
-                src={STEP_IMAGES[step] ?? undefined}
-                alt={title}
-                className="h-full w-auto object-contain select-none"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-              />
-            </AnimatePresence>
-          </div>
-        )}
+        {!isWelcomeStep && <PhoneMockupFrame image={STEP_IMAGES[step]} alt={title} />}
         <h2 className="text-xl font-bold text-white text-center px-6">{title}</h2>
       </div>
 
