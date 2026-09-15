@@ -64,7 +64,7 @@ export default function WheelOfFortunePage() {
   // Truly-free daily spin (no ad, no gems), resetting once a day at 1am Paris time - gated
   // server-side. spinsTowardBonus also rides on this response: every 5 ad/gem spins (the free
   // spin itself doesn't count) earns canSpin back early regardless of the daily timer.
-  const { data: freeSpinStatus } = useQuery<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number }>({
+  const { data: freeSpinStatus } = useQuery<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number; isBonusFreeSpin: boolean }>({
     queryKey: ["/api/daily-spin/free/can-spin"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/daily-spin/free/can-spin");
@@ -73,6 +73,11 @@ export default function WheelOfFortunePage() {
     refetchInterval: 60_000,
   });
   const canSpinFree = freeSpinStatus?.canSpin ?? false;
+  // Which of the two reasons made canSpinFree true right now -- the daily reset, or the every-5
+  // bonus (see storage.ts's getFreeSpinStatus, isBonusFreeSpin). The button below reads this to
+  // show "Free Daily Spin" vs "Free Spins" (Anatole, 2026-09-15: the two were sharing one label
+  // and it read as always the same daily spin, even for the earned bonus one).
+  const isBonusFreeSpin = freeSpinStatus?.isBonusFreeSpin ?? false;
   // What the Free Spin button / bonus block crossfade actually reacts to -- kept a beat behind
   // the raw canSpinFree above. The bar's own progress refreshes right after a click (previous
   // change), which lands well before the reel settles or the reward popup even shows; if the
@@ -81,6 +86,9 @@ export default function WheelOfFortunePage() {
   // player has actually seen and dismissed the reward. See the sync effect below and the
   // reward popup's onClick, which is what actually advances this once dismissed.
   const [displayCanSpinFree, setDisplayCanSpinFree] = useState(canSpinFree);
+  // Mirrors displayCanSpinFree's own lag, same reasoning: the button's label shouldn't flip from
+  // "Free Daily Spin" to "Free Spins" (or back) mid-spin/mid-reward-popup either.
+  const [displayIsBonusFreeSpin, setDisplayIsBonusFreeSpin] = useState(isBonusFreeSpin);
   const spinsTowardBonus = freeSpinStatus?.spinsTowardBonus ?? 0;
   const SPINS_FOR_BONUS_FREE_SPIN = 5;
   // The server resets spinsTowardBonus to 0 in the same atomic update that flips canSpin once
@@ -112,8 +120,9 @@ export default function WheelOfFortunePage() {
   useEffect(() => {
     if (!isSpinning && !showReward) {
       setDisplayCanSpinFree(canSpinFree);
+      setDisplayIsBonusFreeSpin(isBonusFreeSpin);
     }
-  }, [canSpinFree, isSpinning, showReward]);
+  }, [canSpinFree, isBonusFreeSpin, isSpinning, showReward]);
 
   // canSpinFree defaults to false (see its own comment) until /can-spin actually answers, so on
   // every page load displayCanSpinFree starts out false and the effect above then flips it to
@@ -427,7 +436,7 @@ export default function WheelOfFortunePage() {
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
           >
-            {t("freeSpin")}
+            {displayIsBonusFreeSpin ? t("freeSpinsBonus") : t("freeSpin")}
             <BiSolidZap className="w-5 h-5" />
           </motion.button>
 

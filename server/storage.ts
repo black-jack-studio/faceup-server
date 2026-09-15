@@ -265,7 +265,7 @@ export interface IStorage {
 
   // Daily spin methods
   canUserSpin(userId: string): Promise<boolean>;
-  getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number; spinsRemaining: number; maxFreeSpins: number }>;
+  getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number; spinsRemaining: number; maxFreeSpins: number; isBonusFreeSpin: boolean }>;
   getLastFreeSpinAt(userId: string): Promise<Date | null>;
   createDailySpin(spin: InsertDailySpin): Promise<DailySpin>;
   createFreeDailySpin(userId: string, reward: any): Promise<DailySpin>;
@@ -1466,7 +1466,7 @@ export class DatabaseStorage implements IStorage {
     return new Date() >= getNextParisResetAt(lastSpinAt);
   }
 
-  async getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number; spinsRemaining: number; maxFreeSpins: number }> {
+  async getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number; spinsRemaining: number; maxFreeSpins: number; isBonusFreeSpin: boolean }> {
     const user = await this.getUser(userId);
     const maxFreeSpins = isUserPremium(user) ? PREMIUM_FREE_SPINS_PER_DAY : FREE_SPINS_PER_DAY;
     const spinsUsedToday = isFreeSpinsUsedTodayCurrent(user?.freeSpinsUsedTodayUpdatedAt ?? null)
@@ -1481,19 +1481,19 @@ export class DatabaseStorage implements IStorage {
     // the daily timer below -- checked first since it should short-circuit a "come back in Xh"
     // countdown that's otherwise still ticking.
     if (user?.bonusFreeSpinAvailable) {
-      return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining: Math.max(spinsRemaining, 1), maxFreeSpins };
+      return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining: Math.max(spinsRemaining, 1), maxFreeSpins, isBonusFreeSpin: true };
     }
 
     if (spinsRemaining > 0) {
-      return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining, maxFreeSpins };
+      return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining, maxFreeSpins, isBonusFreeSpin: false };
     }
 
     const lastSpinAt = await this.getLastFreeSpinAt(userId);
-    if (!lastSpinAt) return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining: maxFreeSpins, maxFreeSpins };
+    if (!lastSpinAt) return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining: maxFreeSpins, maxFreeSpins, isBonusFreeSpin: false };
 
     const nextReset = getNextParisResetAt(lastSpinAt);
     const now = new Date();
-    if (now >= nextReset) return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining: maxFreeSpins, maxFreeSpins };
+    if (now >= nextReset) return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining: maxFreeSpins, maxFreeSpins, isBonusFreeSpin: false };
 
     return {
       canSpin: false,
@@ -1501,6 +1501,7 @@ export class DatabaseStorage implements IStorage {
       spinsTowardBonus,
       spinsRemaining: 0,
       maxFreeSpins,
+      isBonusFreeSpin: false,
     };
   }
 

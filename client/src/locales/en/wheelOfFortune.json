@@ -1,7 +1,8 @@
 {
   "title": "Lucky Reels",
   "resetIn": "Reset in {{hours}}h {{minutes}}m",
-  "freeSpin": "Free Spin",
+  "freeSpin": "Free Daily Spin",
+  "freeSpinsBonus": "Free Spins",
   "free": "Free",
   "spinMore_one": "Spin {{count}} more time to get a free wheel spin!",
   "spinMore_other": "Spin {{count}} more times to get a free wheel spin!",
