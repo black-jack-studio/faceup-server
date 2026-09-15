@@ -987,44 +987,46 @@ export default function FriendsTableView({
             later, this table's own streak bar — right where the dealer's hand was, instead of
             down at the buttons (Anatole, 2026-09-14: swapped which end of the table shows the
             result, now that the buttons' own slot is doing something else — see below). */}
-        <div className="flex-shrink-0 w-full flex flex-col items-center">
-          {/* Plain conditional here, deliberately NOT AnimatePresence/motion.div the way the two
-              previous attempts at this had it (Anatole, 2026-09-14 — still broken both times: the
-              up-card, always index 0 and dealt already face-up, stuck showing its back every
-              hand). Both previous versions shared one thing this doesn't: the "dealer-cards"
-              branch was mounted by AnimatePresence's own exit-then-enter sequencing (mode="wait")
-              at the exact moment a fresh hand's cards need to play their own mount-time reveal
-              (card.tsx's initial->animate transition, index 0's only ever fires once) — removing
-              that outer sequencing isolates whether it was interfering with that inner one.
-              renderDealer() is always called (never swapped for a placeholder), same reasoning as
-              before: nothing here should unmount/remount the actual card elements. */}
-          {showResult ? (
-            <div className="w-full flex flex-col items-center">
-              <RoundResultBanner
-                show={showResult && !hideResultBanner}
-                resultType={resultType}
-                netResultAmount={netResultAmount}
-                doubledTo={doubledTo}
-                isDoubling={isDoubling}
-                maxBet={MAX_BET}
-                onDismiss={onDismissResult}
-              />
-              {/* Hands off to this same slot a beat after RoundResultBanner's own fade-out above
-                  (see hideResultBanner/showStreakInResultSlot timing, owned by friends-lobby.tsx)
-                  — this table's own independent win streak (see currentStreakFriends in
-                  schema.ts), same 3-win-cycle bar/flame/celebration as House's WinStreakBar, just
-                  not sharing House's own counter/leaderboard. */}
-              {showStreakInResultSlot && (friendsStreak > 0 || streakCelebrationBonus != null) && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
-                  <WinStreakBar streak={friendsStreak} celebrationBonus={streakCelebrationBonus} />
-                </motion.div>
-              )}
-            </div>
-          ) : (
-            <div className={`w-full flex flex-col items-center transition-opacity duration-200 ${forceHidden || isDismissingResult ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
-              {renderDealer()}
-            </div>
-          )}
+        <div className="flex-shrink-0 w-full grid grid-cols-1">
+          {/* Both branches always mounted, stacked in the same grid cell (col-start-1/row-start-1)
+              and crossfaded by opacity alone — deliberately NOT a conditional swap or
+              AnimatePresence/motion.div the way the two previous attempts at this had it (Anatole,
+              2026-09-14 — still broken both times: the up-card, always index 0 and dealt already
+              face-up, stuck showing its back every hand). Both previous versions shared one thing
+              this doesn't: the "dealer-cards" branch was mounted/unmounted by the swap itself —
+              once via AnimatePresence's own exit-then-enter sequencing (mode="wait"), once via a
+              plain conditional — right at the exact moment a fresh hand's cards need to play their
+              own mount-time reveal (card.tsx's initial->animate transition, index 0's only ever
+              fires once). Keeping both permanently mounted (Anatole, 2026-09-15: wanted this
+              handoff itself smoother, an instant swap read as a jump cut) removes that risk
+              entirely instead of just relocating it — renderDealer() is never unmounted by this
+              handoff in either direction, only ever faded. The grid stacking (rather than absolute
+              positioning) is what lets this cell's own height track whichever of the two is
+              currently visible without an explicit height needing to be set by hand. */}
+          <div className={`col-start-1 row-start-1 w-full flex flex-col items-center transition-opacity duration-300 ${showResult ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+            <RoundResultBanner
+              show={showResult && !hideResultBanner}
+              resultType={resultType}
+              netResultAmount={netResultAmount}
+              doubledTo={doubledTo}
+              isDoubling={isDoubling}
+              maxBet={MAX_BET}
+              onDismiss={onDismissResult}
+            />
+            {/* Hands off to this same slot a beat after RoundResultBanner's own fade-out above
+                (see hideResultBanner/showStreakInResultSlot timing, owned by friends-lobby.tsx)
+                — this table's own independent win streak (see currentStreakFriends in
+                schema.ts), same 3-win-cycle bar/flame/celebration as House's WinStreakBar, just
+                not sharing House's own counter/leaderboard. */}
+            {showStreakInResultSlot && (friendsStreak > 0 || streakCelebrationBonus != null) && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
+                <WinStreakBar streak={friendsStreak} celebrationBonus={streakCelebrationBonus} />
+              </motion.div>
+            )}
+          </div>
+          <div className={`col-start-1 row-start-1 w-full flex flex-col items-center transition-opacity duration-300 ${!showResult && !forceHidden && !isDismissingResult ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+            {renderDealer()}
+          </div>
         </div>
 
         <div className="w-full flex-shrink-0 flex flex-col items-center gap-3">
@@ -1039,15 +1041,20 @@ export default function FriendsTableView({
             // Crossfades between the shared ActionBar (same component Classic solo/House uses)
             // and the Watch-to-2X button, exactly like House's own equivalent box in classic.tsx
             // — a win replaces the buttons with the offer; a loss/push just leaves ActionBar
-            // sitting there (naturally inert once the hand's over).
-            <AnimatePresence mode="wait" initial={false}>
+            // sitting there (naturally inert once the hand's over). mode="popLayout" (not "wait",
+            // Anatole, 2026-09-15: the sequential exit-then-enter read as a stutter, same fix as
+            // the table<->betting screen crossfade above) — the exiting box is taken out of layout
+            // flow the instant it starts fading, so the incoming one starts its own fade-in
+            // immediately instead of waiting for it to finish first. Exit now shares the enter's
+            // own duration/easing for a symmetric crossfade instead of a quicker snap-out.
+            <AnimatePresence mode="popLayout" initial={false}>
               {showWatchToDouble ? (
                 <motion.div
                   key="watch2x"
                   className="w-full flex flex-col items-center gap-1.5"
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
-                  exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                  animate={{ opacity: 1, transition: { duration: 0.22, ease: "easeOut" } }}
+                  exit={{ opacity: 0, transition: { duration: 0.22, ease: "easeOut" } }}
                 >
                   {/* n/limit remaining today, same grey as Classic solo's identical label —
                       always shows this count, reached or not; only the button itself changes
@@ -1090,8 +1097,8 @@ export default function FriendsTableView({
                   key="actions"
                   className="w-full"
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
-                  exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                  animate={{ opacity: 1, transition: { duration: 0.22, ease: "easeOut" } }}
+                  exit={{ opacity: 0, transition: { duration: 0.22, ease: "easeOut" } }}
                 >
                   <ActionBar
                     className="w-full"

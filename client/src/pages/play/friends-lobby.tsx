@@ -495,8 +495,15 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       // true here; reset instead once the next hand actually starts dealing (see the
       // `!myHandResult` branch above), well after this screen has already left the table view.
       // Lets the bet bar tell "everyone's back" from "just me" (see allSeatsAcknowledged
-      // below) instead of looking ready to bet the instant I alone dismiss.
-      acknowledgeMutation.mutate();
+      // below) instead of looking ready to bet the instant I alone dismiss. Fired a further
+      // beat after the screen swap itself starts (Anatole, 2026-09-15: the swap still read as a
+      // little stuttery) rather than in the same tick as reviewingLastHand above — its own
+      // onSuccess invalidates this table's query, and that refetch landing (and re-rendering the
+      // freshly-mounted bet screen with new data) mid-crossfade was competing with the swap's own
+      // animation frames for main-thread time. Purely a background heartbeat (see this mutation's
+      // own comment on being silent-on-failure/non-urgent), so delaying it past the crossfade's
+      // own ~0.32s costs nothing.
+      setTimeout(() => acknowledgeMutation.mutate(), 350);
     }, 200);
   };
 
