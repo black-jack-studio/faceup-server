@@ -12,7 +12,6 @@ import BottomSheet from "@/components/BottomSheet";
 import { GameRulesContent } from "@/pages/game-rules";
 import { CreditsContent } from "@/pages/credits";
 import { Switch } from "@/components/ui/switch";
-import { isSoundEnabled, setSoundEnabled, unlockAudio } from "@/lib/sound";
 import { isHapticsEnabled, setHapticsEnabled } from "@/lib/haptics";
 import { setAppLanguage, type AppLanguage } from "@/i18n";
 
@@ -26,7 +25,6 @@ export default function Settings() {
   const [showCredits, setShowCredits] = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [soundEnabled, setSoundEnabledState] = useState(true);
   const [hapticsEnabled, setHapticsEnabledState] = useState(true);
   const currentLanguage = (i18n.language?.split("-")[0] as AppLanguage) === "fr" ? "fr" : "en";
 
@@ -36,17 +34,8 @@ export default function Settings() {
   };
 
   useEffect(() => {
-    setSoundEnabledState(isSoundEnabled());
     setHapticsEnabledState(isHapticsEnabled());
   }, []);
-
-  const handleToggleSound = (checked: boolean) => {
-    setSoundEnabledState(checked);
-    setSoundEnabled(checked);
-    if (checked) {
-      unlockAudio();
-    }
-  };
 
   const handleToggleHaptics = (checked: boolean) => {
     setHapticsEnabledState(checked);
@@ -180,15 +169,6 @@ export default function Settings() {
               checked={hapticsEnabled}
               onCheckedChange={handleToggleHaptics}
               data-testid="switch-haptics"
-            />
-          </div>
-
-          <div className="w-full flex items-center justify-between py-4 border-b border-white/20">
-            <span className="text-white font-bold">{t("soundEffects")}</span>
-            <Switch
-              checked={soundEnabled}
-              onCheckedChange={handleToggleSound}
-              data-testid="switch-sound-effects"
             />
           </div>
 

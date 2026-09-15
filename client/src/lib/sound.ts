@@ -3,6 +3,12 @@
 // WebView, and needs no native build to test. Files are Kenney's CC0 "Casino Audio" and
 // "Interface Sounds" packs (client/public/sounds/LICENSE-kenney-*.txt).
 
+// Shelved 2026-09-15: the whole sound system (per-tap click sound, per-card flip sound,
+// win/lose/push) is switched off here rather than ripped out — flip this back to true to bring
+// it all back with nothing else to rewire. The Settings screen's toggle row was removed while
+// this is off, since there'd be nothing left for it to control.
+const SOUND_SYSTEM_ENABLED = false;
+
 const SOUND_FILES = {
   cardDeal: "/sounds/card-deal.wav",
   cardFlip: "/sounds/card-flip.wav",
@@ -41,7 +47,7 @@ function getAudio(name: SoundName): HTMLAudioElement {
 // played all at once, audibly, on the very first tap.
 let unlocked = false;
 export function unlockAudio() {
-  if (unlocked) return;
+  if (!SOUND_SYSTEM_ENABLED || unlocked) return;
   unlocked = true;
   Object.keys(SOUND_FILES).forEach((name) => {
     const el = getAudio(name as SoundName);
@@ -73,7 +79,7 @@ export function playSound(
   // than left to accumulate, since the same pooled <audio> element is reused across plays.
   options?: { playbackRate?: number; volumeBoost?: number },
 ) {
-  if (!isSoundEnabled()) return;
+  if (!SOUND_SYSTEM_ENABLED || !isSoundEnabled()) return;
   const el = getAudio(name);
   try {
     el.currentTime = 0;
