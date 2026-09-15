@@ -1632,7 +1632,7 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   // START GAME — debits the bet, deals real cards from a fresh shuffled deck, and either
   // settles immediately (natural blackjack) or persists an in-progress active_games row.
-  app.post("/api/game/start", requireAuth, async (req, res) => {
+  app.post("/api/game/start", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
       const mode: string = req.body.mode;
@@ -1787,7 +1787,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   // ACTION — hit/stand/double/split/surrender. Re-validates the action server-side against
   // the persisted game state (never trusts client UI state), mutates the real deck/hands, and
   // once every hand is done, plays the dealer out and settles/credits atomically.
-  app.post("/api/game/action", requireAuth, async (req, res) => {
+  app.post("/api/game/action", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
       const { gameId, action } = req.body as { gameId?: string; action?: GameAction };
@@ -1922,7 +1922,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   // un-split, un-acted-on hand — same "first decision" window Double uses (see
   // computeLegalActions) — and capped at one swap per hand, enforced here via
   // PlayerHand.swapped even though the client already disables the button after one use.
-  app.post("/api/game/swap", requireAuth, async (req, res) => {
+  app.post("/api/game/swap", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
       const { gameId, viaAd } = req.body as { gameId?: string; viaAd?: boolean };
@@ -2094,7 +2094,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  app.post("/api/game/double-reward", requireAuth, async (req, res) => {
+  app.post("/api/game/double-reward", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
       const { gameId } = req.body as { gameId?: string };
@@ -2220,7 +2220,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   // this is an explicit "I'm leaving" action, so it settles every unresolved hand as a loss
   // instead of returning the bet — the whole point Anatole asked for is that leaving actually
   // costs you the bet.
-  app.post("/api/game/forfeit", requireAuth, async (req, res) => {
+  app.post("/api/game/forfeit", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
       const game = await storage.getActiveGameForUser(userId);

@@ -36,7 +36,15 @@ export const sessionMiddleware = session({
     createTableIfMissing: true,
     pruneSessionInterval: 86400, // prune expired entries every 24h (seconds, not ms)
   }),
-  secret: process.env.SESSION_SECRET || 'blackjack-secret-key',
+  // Falling back to a hardcoded secret in production would let anyone who's ever read this
+  // source forge a signed session cookie for any userId — fail loudly instead of silently
+  // running insecure. Dev/local keeps the fallback since there's no real user data at stake.
+  secret: process.env.SESSION_SECRET || (() => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('SESSION_SECRET must be set in production');
+    }
+    return 'blackjack-secret-key';
+  })(),
   resave: false,
   saveUninitialized: false,
   cookie: {
