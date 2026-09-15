@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pause, Loop } from "@/icons";
+import { ArrowLeft, Pause } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
@@ -30,12 +30,17 @@ import { getWinIntensity } from "@/lib/winIntensity";
 import { COIN_STAGGER, COIN_FLIGHT_DURATION } from "@/lib/coinFlightTiming";
 import { trackCoinsDepleted } from "@/lib/analytics";
 import { useToast } from "@/hooks/use-toast";
+import { triggerHapticImpact } from "@/lib/haptics";
 
 // Entry-level room preset (lowest tapis, mise mini/maxi basse). Room names are meant to climb
 // in glamour as the tapis mini goes up (House -> ... -> Vegas -> Paris -> Monaco), not stay
 // "Las Vegas" at the very bottom rung. Not wired to a real room system yet — every table is
 // this same preset for now.
 const ROOM = { name: "House", minBet: 1, maxBet: 500 };
+
+// How long a press on the BET button has to hold before it's read as "turn on auto mode"
+// rather than a normal tap — see handleBetPressStart/handleBetPressEnd.
+const AUTO_MODE_HOLD_MS = 500;
 
 // EXPERIMENTAL (Anatole, 2026-09-12) — test change: the result's auto-advance/streak-handoff
 // below now runs the same way in manual play as in auto-bet (2026-09-12, second pass — it
@@ -378,6 +383,29 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   const handleBetSliderChange = (value: number) => {
     const rounded = Math.round(value);
     setCurrentBet(Math.max(ROOM.minBet, Math.min(dynamicMax, rounded)));
+  };
+
+  // Holding the BET button (instead of tapping it) is how auto mode now turns on — see the
+  // header's own comment for why the old standalone toggle button is gone. betPressFiredRef
+  // is what tells the onClick right below that the hold already fired its own handlePlaceBet,
+  // so the click that follows the eventual pointerup doesn't fire a second one.
+  const betPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const betPressFiredRef = useRef(false);
+  const handleBetPressStart = () => {
+    if (isPlacingBet || balance < currentBet) return;
+    betPressFiredRef.current = false;
+    betPressTimerRef.current = setTimeout(() => {
+      betPressFiredRef.current = true;
+      triggerHapticImpact();
+      setAutoBetEnabled(true);
+      handlePlaceBet();
+    }, AUTO_MODE_HOLD_MS);
+  };
+  const handleBetPressEnd = () => {
+    if (betPressTimerRef.current) {
+      clearTimeout(betPressTimerRef.current);
+      betPressTimerRef.current = null;
+    }
   };
 
   // isAuto marks a call fired by handleDismissResult's own auto-bet re-fire rather than the
@@ -895,26 +923,26 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
               <ArrowLeft className="w-5 h-5" />
             </button>
             {/* Sits below the back arrow (absolute, out of flow, so it never grows the header
-                row's own height) — the single control for auto-bet, replacing the standalone
-                switch that used to sit in the bet wheel itself (see the wheel's own comment on
-                why that row is gone). Always here, on the bet screen and mid-hand alike: a tap
-                flips autoBetEnabled either way — off shows the loop glyph ("start it"), on
-                swaps to pause ("stop it") and lands back on the bet screen at the end of
-                whichever hand is currently in flight, never interrupting one mid-hand. */}
-            <button
-              onClick={() => setAutoBetEnabled((v) => !v)}
-              className="absolute top-full left-0 mt-0.5 flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer transition-colors"
-              style={{
-                background: "transparent",
-                border: "none",
-                padding: 0,
-                color: autoBetEnabled ? "#3b82f6" : "#ffffff",
-              }}
-              aria-label={autoBetEnabled ? t("pauseAutoBet") : t("autoBet")}
-              data-testid="button-toggle-autobet"
-            >
-              {autoBetEnabled ? <Pause className="w-4 h-4" /> : <Loop className="w-4 h-4" />}
-            </button>
+                row's own height). Starting auto mode has no button of its own anymore — that
+                now happens by holding the BET button itself (see its own comment on the wheel
+                below) — so this is purely the "stop it" control: only rendered once a hand is
+                actually in flight (never on the bet screen) and only while auto mode is on. */}
+            {!isBetting && autoBetEnabled && (
+              <button
+                onClick={() => setAutoBetEnabled(false)}
+                className="absolute top-full left-0 mt-0.5 flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer transition-colors"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  padding: 0,
+                  color: "#3b82f6",
+                }}
+                aria-label={t("pauseAutoBet")}
+                data-testid="button-pause-autobet"
+              >
+                <Pause className="w-4 h-4" />
+              </button>
+            )}
           </div>
           {/* Replaces the old "Dealer" title + top-hat glyph — the balance is what the player
               actually tracks hand to hand now (see the brief this came from). Same font-light/
@@ -1243,18 +1271,41 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                       {t("goToShop").toUpperCase()}
                     </motion.button>
                   ) : (
-                    <motion.button
-                      // Not just {handlePlaceBet}: onClick would hand it the click event as its
-                      // first arg, and handlePlaceBet now reads that same slot as isAuto — any
-                      // truthy event object would flip isAutoRebetting on for a manual tap too.
-                      onClick={() => handlePlaceBet()}
-                      disabled={isPlacingBet || balance < currentBet}
-                      whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.96 } : {}}
-                      className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
-                      data-testid="button-place-bet"
-                    >
-                      {isPlacingBet ? t("dealing") : t("betCta", { amount: formatFullNumber(currentBet) })}
-                    </motion.button>
+                    <>
+                      <motion.button
+                        // Not just {handlePlaceBet}: onClick would hand it the click event as its
+                        // first arg, and handlePlaceBet now reads that same slot as isAuto — any
+                        // truthy event object would flip isAutoRebetting on for a manual tap too.
+                        // A hold past AUTO_MODE_HOLD_MS is handled separately, in
+                        // handleBetPressStart's own setTimeout — that one already calls
+                        // handlePlaceBet() itself, so this onClick has to skip firing a second
+                        // one once betPressFiredRef says the hold already did (see its comment).
+                        onClick={() => {
+                          if (betPressFiredRef.current) {
+                            betPressFiredRef.current = false;
+                            return;
+                          }
+                          handlePlaceBet();
+                        }}
+                        onPointerDown={handleBetPressStart}
+                        onPointerUp={handleBetPressEnd}
+                        onPointerLeave={handleBetPressEnd}
+                        onPointerCancel={handleBetPressEnd}
+                        onContextMenu={(e) => e.preventDefault()}
+                        disabled={isPlacingBet || balance < currentBet}
+                        whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.96 } : {}}
+                        className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed select-none touch-manipulation"
+                        data-testid="button-place-bet"
+                      >
+                        {isPlacingBet ? t("dealing") : t("betCta", { amount: formatFullNumber(currentBet) })}
+                      </motion.button>
+                      {/* Auto mode's only entry point now (see the header's own comment) — a
+                          plain static hint under the button rather than anything interactive of
+                          its own. */}
+                      <p className="text-center text-[11px] text-white/40" data-testid="text-hold-for-auto-mode">
+                        {t("holdForAutoMode")}
+                      </p>
+                    </>
                   )}
                 </div>
               </motion.div>

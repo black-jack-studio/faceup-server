@@ -6,7 +6,7 @@
   "surrender": "Surrender",
   "swap": "Swap",
   "pauseAutoBet": "Pause auto-bet",
-  "autoBet": "Auto-bet",
+  "holdForAutoMode": "Hold to enable Auto Mode",
   "emptySeat": "Empty seat",
   "leaveTableTitle": "Leave the table?",
   "leaveTableWarning": "You'll forfeit your {{amount}} coin bet. It won't be refunded.",
