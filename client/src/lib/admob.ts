@@ -2,13 +2,22 @@ import { AdMob, RewardAdPluginEvents } from "@capacitor-community/admob";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import { peekTrackingAuthorizationStatus } from "@/lib/tracking-authorization";
 
-// Real FaceUp AdMob rewarded ad units. `isTesting: true` below (see showRewardedAd) makes the
-// SDK automatically serve Google's sample test ads instead of these on non-registered devices,
-// so it's safe to ship these real IDs before the app is store-approved.
+// Real FaceUp AdMob rewarded ad units. ADS_ARE_LIVE below forces Google's sample test ads
+// instead of these on every build until it's flipped, so it's safe to ship these real IDs
+// before the app is store-approved.
 const REWARDED_AD_UNIT_ID: Record<string, string> = {
   ios: "ca-app-pub-2568391662663564/4460833189",
   android: "ca-app-pub-2568391662663564/9202662003",
 };
+
+// Single switch for going from test to real ads. Deliberately NOT tied to a build/environment
+// flag (e.g. import.meta.env.PROD) -- a production build (TestFlight, internal testing) doesn't
+// mean "ready to serve real ads to real users", and until the app is actually launched every
+// "watch to double" would otherwise hand out real coins for a real ad impression that's really
+// just an internal test. Flip this to true only once the app has shipped and you want real ads
+// (and real revenue) to start flowing -- that's the one line to change, nothing else in this
+// file needs touching.
+const ADS_ARE_LIVE = false;
 
 let initPromise: Promise<void> | null = null;
 
@@ -27,8 +36,7 @@ export function initAdMob(): Promise<void> {
       await peekTrackingAuthorizationStatus();
 
       await AdMob.initialize({
-        // TODO: set to false once this app ships with its own production ad unit IDs.
-        initializeForTesting: true,
+        initializeForTesting: !ADS_ARE_LIVE,
       });
     })();
   }
@@ -77,7 +85,7 @@ export async function showRewardedAd(): Promise<boolean> {
     dismissedHandle = AdMob.addListener(RewardAdPluginEvents.Dismissed, () => settle(earnedReward));
     failedHandle = AdMob.addListener(RewardAdPluginEvents.FailedToShow, () => settle(false));
 
-    AdMob.prepareRewardVideoAd({ adId, isTesting: true }) // TODO: remove isTesting for production
+    AdMob.prepareRewardVideoAd({ adId, isTesting: !ADS_ARE_LIVE })
       .then(() => AdMob.showRewardVideoAd())
       .catch(() => settle(false));
   });

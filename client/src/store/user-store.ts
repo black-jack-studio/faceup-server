@@ -35,8 +35,6 @@ interface UserActions {
   isPremium: () => boolean;
   // Game-specific coin actions (replaces chips-store)
   loadUserCoins: () => Promise<void>;
-  deductBet: (amount: number) => Promise<void>;
-  addWinnings: (amount: number) => Promise<void>;
 }
 
 type UserStore = UserState & UserActions;
@@ -412,36 +410,6 @@ export const useUserStore = create<UserStore>()(
         } finally {
           set({ isLoading: false });
         }
-      },
-
-      deductBet: async (amount: number) => {
-        const currentUser = get().user;
-        if (!currentUser) return;
-
-        const currentCoins = currentUser.coins || 0;
-        const newCoins = Math.max(0, currentCoins - amount);
-
-        // Optimistic update for immediate UI feedback
-        get().updateUser({ coins: newCoins });
-
-        // updateUser already syncs to server via PATCH /api/user/profile
-      },
-
-      addWinnings: async (amount: number) => {
-        const currentUser = get().user;
-        if (!currentUser) return;
-
-        const newCoins = (currentUser.coins || 0) + amount;
-
-        console.log("🔍 USER STORE - addWinnings called:");
-        console.log("🔍 amount to add:", amount);
-        console.log("🔍 currentCoins:", currentUser.coins);
-        console.log("🔍 newCoins:", newCoins);
-
-        // Optimistic update for immediate UI feedback
-        get().updateUser({ coins: newCoins });
-
-        // updateUser already syncs to server via PATCH /api/user/profile
       },
 
     }),

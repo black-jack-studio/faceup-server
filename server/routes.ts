@@ -1669,133 +1669,154 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "Insufficient funds" });
       }
 
-      // Atomic debit — the WHERE guard makes this race-safe against concurrent spends,
-      // same pattern as the proven /api/bets/commit debit.
-      const [debitedUser] = await db
-        .update(users)
-        .set({
-          coins: sql`${users.coins} - ${betAmount}`,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(users.id, userId), gte(users.coins, betAmount)))
-        .returning();
-
-      if (!debitedUser) {
-        return res.status(409).json({ message: "Insufficient funds" });
-      }
-
-      const deck = ServerBlackjackEngine.createShuffledDeck();
-      const deckSeed = randomBytes(16).toString("hex");
-      const deckHash = createHash("sha256").update(JSON.stringify(deck)).digest("hex");
-
-      const playerCards = [deck.pop()!, deck.pop()!];
-      const dealerCards = [deck.pop()!, deck.pop()!];
-
-      if (ServerBlackjackEngine.isBlackjack(playerCards)) {
-        // Natural blackjack settles immediately — no waiting on player action.
-        const outcome = ServerBlackjackEngine.determineWinner(playerCards, dealerCards);
-        const basePayout = computeHandPayout(mode, outcome.result, outcome.isPlayerBlackjack, betAmount);
-        const handResult = outcome.result === "push" ? "push" : "blackjack";
-
-        const { streak, peakStreak, bonusCoins } = await applyClassicStreakBonus(
-          db, userId, mode, false, [{ result: handResult }], basePayout - betAmount,
-        );
-        const payout = basePayout + bonusCoins;
-
-        const playerHands: PlayerHand[] = [{
-          cards: playerCards,
-          bet: betAmount,
-          doubled: false,
-          status: "blackjack",
-          result: handResult,
-          payout,
-        }];
-
-        const [settledUser] = await db
-          .update(users)
-          .set({ coins: sql`${users.coins} + ${payout}`, updatedAt: new Date() })
-          .where(eq(users.id, userId))
-          .returning();
-
-        // Persisted (not just reported inline) so a natural blackjack has a real gameId too —
-        // the "watch an ad to double" offer on the result sheet needs a row to double against,
-        // same as a hand that went through /api/game/action.
-        const settledGame = await storage.createActiveGame({
-          userId, mode, status: "in_progress", betAmount,
-          deck, deckSeed, deckHash,
-          playerHands, dealerHand: dealerCards, activeHandIndex: 0,
-        });
-        await storage.completeActiveGame(settledGame.id);
-
-        await recordGameSettlement(userId, mode, playerHands, false, peakStreak);
-
-        return res.json({
-          success: true,
-          gameId: settledGame.id,
-          status: "completed",
-          mode,
-          betAmount,
-          playerHands,
-          dealerHand: dealerCards,
-          activeHandIndex: 0,
-          legalActions: [],
-          result: { payout, netResult: payout - betAmount },
-          remainingCoins: settledUser.coins,
-          streak,
-          streakBonus: bonusCoins,
-        });
-      }
-
-      const playerHand: PlayerHand = { cards: playerCards, bet: betAmount, doubled: false, status: "active", result: null, payout: null };
-      let activeGame;
+      // Debit through settlement/creation all happen in one transaction — previously the debit,
+      // the payout credit, and persisting the active_games row were three separate statements,
+      // so a crash or connection drop between them (e.g. right after debiting for a natural
+      // blackjack, before its payout credit ran) could leave a player's bet taken with nothing
+      // to show for it. Wrapping it all in one transaction makes it all-or-nothing, same pattern
+      // already proven in /api/game/action just below (2026-09-15 economy audit).
+      let outcome: { status: number; body: any; bookkeeping?: { mode: string; playerHands: PlayerHand[]; classicPeakStreak: number } };
       try {
-        activeGame = await storage.createActiveGame({
-          userId,
-          mode,
-          status: "in_progress",
-          betAmount,
-          deck,
-          deckSeed,
-          deckHash,
-          playerHands: [playerHand],
-          dealerHand: dealerCards,
-          activeHandIndex: 0,
+        outcome = await db.transaction(async (tx: any) => {
+          // Atomic debit — the WHERE guard makes this race-safe against concurrent spends,
+          // same pattern as the proven /api/bets/commit debit.
+          const [debitedUser] = await tx
+            .update(users)
+            .set({
+              coins: sql`${users.coins} - ${betAmount}`,
+              updatedAt: new Date(),
+            })
+            .where(and(eq(users.id, userId), gte(users.coins, betAmount)))
+            .returning();
+
+          if (!debitedUser) {
+            return { status: 409, body: { message: "Insufficient funds" } };
+          }
+
+          const deck = ServerBlackjackEngine.createShuffledDeck();
+          const deckSeed = randomBytes(16).toString("hex");
+          const deckHash = createHash("sha256").update(JSON.stringify(deck)).digest("hex");
+
+          const playerCards = [deck.pop()!, deck.pop()!];
+          const dealerCards = [deck.pop()!, deck.pop()!];
+
+          if (ServerBlackjackEngine.isBlackjack(playerCards)) {
+            // Natural blackjack settles immediately — no waiting on player action.
+            const bjOutcome = ServerBlackjackEngine.determineWinner(playerCards, dealerCards);
+            const basePayout = computeHandPayout(mode, bjOutcome.result, bjOutcome.isPlayerBlackjack, betAmount);
+            const handResult = bjOutcome.result === "push" ? "push" : "blackjack";
+
+            const { streak, peakStreak, bonusCoins } = await applyClassicStreakBonus(
+              tx, userId, mode, false, [{ result: handResult }], basePayout - betAmount,
+            );
+            const payout = basePayout + bonusCoins;
+
+            const playerHands: PlayerHand[] = [{
+              cards: playerCards,
+              bet: betAmount,
+              doubled: false,
+              status: "blackjack",
+              result: handResult,
+              payout,
+            }];
+
+            const [settledUser] = await tx
+              .update(users)
+              .set({ coins: sql`${users.coins} + ${payout}`, updatedAt: new Date() })
+              .where(eq(users.id, userId))
+              .returning();
+
+            // Persisted straight as "completed" (not the storage.createActiveGame + separate
+            // completeActiveGame two-step this replaced) so a natural blackjack has a real
+            // gameId too — the "watch an ad to double" offer on the result sheet needs a row to
+            // double against, same as a hand that went through /api/game/action.
+            const [settledGame] = await tx.insert(activeGames).values({
+              userId, mode, status: "completed", betAmount,
+              deck, deckSeed, deckHash,
+              playerHands, dealerHand: dealerCards, activeHandIndex: 0,
+              resolvedAt: new Date(),
+            }).returning();
+
+            return {
+              status: 200,
+              body: {
+                success: true,
+                gameId: settledGame.id,
+                status: "completed",
+                mode,
+                betAmount,
+                playerHands,
+                dealerHand: dealerCards,
+                activeHandIndex: 0,
+                legalActions: [],
+                result: { payout, netResult: payout - betAmount },
+                remainingCoins: settledUser.coins,
+                streak,
+                streakBonus: bonusCoins,
+              },
+              bookkeeping: { mode, playerHands, classicPeakStreak: peakStreak },
+            };
+          }
+
+          const playerHand: PlayerHand = { cards: playerCards, bet: betAmount, doubled: false, status: "active", result: null, payout: null };
+          const [activeGame] = await tx.insert(activeGames).values({
+            userId,
+            mode,
+            status: "in_progress",
+            betAmount,
+            deck,
+            deckSeed,
+            deckHash,
+            playerHands: [playerHand],
+            dealerHand: dealerCards,
+            activeHandIndex: 0,
+          }).returning();
+
+          // Drives whether Swap lights up (see handStrength.ts). Computed against this exact
+          // remaining deck (already down 4 cards from the pop()s above) so it's ready in the
+          // very same response that deals the cards, not a separate round-trip after.
+          const winProbability = simulateWinProbability(playerCards, dealerCards[0], deck);
+
+          return {
+            status: 200,
+            body: {
+              success: true,
+              gameId: activeGame.id,
+              status: "in_progress",
+              mode,
+              betAmount,
+              playerHands: [playerHand],
+              dealerHand: redactDealerHand(dealerCards),
+              activeHandIndex: 0,
+              legalActions: computeLegalActions(playerHand, mode, [playerHand]),
+              remainingCoins: debitedUser.coins,
+              winProbability,
+            },
+          };
         });
       } catch (error: any) {
-        // Postgres unique_violation on active_games_one_in_progress_per_user (see
-        // migrations_manual/2026-09-15_active_games_one_per_user.sql) — a concurrent
+        // Postgres unique_violation on active_games_one_in_progress_per_user — a concurrent
         // /api/game/start for this same user (double-tap, network retry) already won the race
-        // and created the in-progress row first. This request's bet was debited above but will
-        // never be played, so refund it instead of leaving it lost against a game that will
-        // never exist (2026-09-15 economy audit).
+        // and created the in-progress row first. The transaction above rolls back atomically on
+        // this throw, so this request's debit is undone right along with it — nothing to refund
+        // by hand (2026-09-15 economy audit).
         if (error?.code === "23505") {
-          await db
-            .update(users)
-            .set({ coins: sql`${users.coins} + ${betAmount}`, updatedAt: new Date() })
-            .where(eq(users.id, userId));
           return res.status(409).json({ message: "A game is already in progress" });
         }
         throw error;
       }
 
-      // Drives whether Swap lights up (see handStrength.ts). Computed against this exact
-      // remaining deck (already down 4 cards from the pop()s above) so it's ready in the very
-      // same response that deals the cards, not a separate round-trip after.
-      const winProbability = simulateWinProbability(playerCards, dealerCards[0], deck);
+      res.status(outcome.status).json(outcome.body);
 
-      res.json({
-        success: true,
-        gameId: activeGame.id,
-        status: "in_progress",
-        mode,
-        betAmount,
-        playerHands: [playerHand],
-        dealerHand: redactDealerHand(dealerCards),
-        activeHandIndex: 0,
-        legalActions: computeLegalActions(playerHand, mode, [playerHand]),
-        remainingCoins: debitedUser.coins,
-        winProbability,
-      });
+      if (outcome.bookkeeping) {
+        // Response already sent — a failure here must not attempt to write to it again.
+        const bk = outcome.bookkeeping;
+        try {
+          await recordGameSettlement(userId, bk.mode, bk.playerHands, false, bk.classicPeakStreak);
+        } catch (bookkeepingError) {
+          console.error("Error recording game settlement bookkeeping:", bookkeepingError);
+        }
+      }
     } catch (error: any) {
       console.error("Error starting game:", error);
       res.status(500).json({ message: error.message });

@@ -8,7 +8,9 @@ import type { PlayerHand, GameAction } from "@shared/blackjack-types";
 // whatever row(s) the hand(s) live on.
 
 export function computeHandPayout(mode: string, result: "win" | "lose" | "push", isNaturalBlackjack: boolean, bet: number): number {
-  if (result === "win") return isNaturalBlackjack ? Math.floor(bet * 2.5) : bet * 2;
+  // Rounded up rather than down on an odd bet -- a fraction of a coin should round in the
+  // player's favor, not the house's.
+  if (result === "win") return isNaturalBlackjack ? Math.ceil(bet * 2.5) : bet * 2;
   if (result === "push") return bet;
   return 0;
 }
@@ -61,7 +63,7 @@ export function settleHandsAgainstDealer(mode: string, deck: Card[], dealerHand:
       hand.payout = computeHandPayout(mode, "lose", false, hand.bet);
     } else if (hand.status === "surrendered") {
       hand.result = "lose";
-      hand.payout = Math.floor(hand.bet * 0.5);
+      hand.payout = Math.ceil(hand.bet * 0.5);
     } else {
       const playerTotal = ServerBlackjackEngine.calculateTotal(hand.cards);
       let result: "win" | "lose" | "push";
