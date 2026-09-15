@@ -465,46 +465,42 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   }, [showStreakInResultSlot, streakCelebrationBonus]);
 
   // Fired from RoundResultBanner's own tap-anywhere layer, now mounted inside FriendsTableView
-  // (see its own comment) instead of GameResultOverlay's bottom-sheet backdrop. Waits for the
-  // banner/streak bar's own fade-out (200ms, matches FriendsTableView's crossfade exit) before
-  // swapping straight back to the betting screen — deliberately no intermediate step that flips
-  // the table's cards back to their card-back face first (Anatole, 2026-09-15: wanted the cut
-  // from streak bar to betting screen direct, without watching every hand's cards flip over
-  // again first). The screen swap itself (showTableView's own AnimatePresence in the JSX below)
-  // already crossfades table→bet, so this doesn't read as an abrupt jump cut.
+  // (see its own comment) instead of GameResultOverlay's bottom-sheet backdrop. Everything below
+  // fires in one synchronous batch now (Anatole, 2026-09-15: used to stagger a 200ms "hide the
+  // table's content" step before a further, separately-timed screen crossfade — different pieces
+  // (dealer cards, buttons, my own cards, my avatar block) ended up visibly leaving at different
+  // moments instead of all at once). Starting every fade from the exact same instant is what
+  // makes them read as one motion: FriendsTableView's own isDismissingResult gate (200ms CSS
+  // opacity, friends-table-view.tsx) hides all of the table's live content quickly, while the
+  // screen-level crossfade below (showTableView's own AnimatePresence, popLayout, ~320ms) fades
+  // the whole table view out into the betting screen over a slightly longer, overlapping window
+  // — instead of the previous 200ms wait *then* 320ms crossfade (520ms total, two visibly
+  // separate stages).
   const handleDismissResult = () => {
     if (dismissedResultRef.current) return;
     dismissedResultRef.current = true;
     setShowResult(false);
     setIsDismissingResult(true);
+    setReviewingLastHand(false);
+    // Sends me back to the betting screen right away — doesn't wait on a friend also dismissing
+    // their own sheet (see dismissedResult above). The next betting round isn't opened from here
+    // at all: placeTableBet itself lazily opens it the moment anyone actually places a bet (see
+    // its comment in storage.ts), so nobody's dismissal ever forces the table to move on before
+    // someone else still reviewing their own result has had a chance to see it.
+    setDismissedResult(true);
     setTimeout(() => {
       setResultOverlay(null);
-      setReviewingLastHand(false);
-      // Sends me back to the betting screen right away — doesn't wait on a friend also
-      // dismissing their own sheet (see dismissedResult above). The next betting round isn't
-      // opened from here at all: placeTableBet itself lazily opens it the moment anyone
-      // actually places a bet (see its comment in storage.ts), so nobody's dismissal ever
-      // forces the table to move on before someone else still reviewing their own result has
-      // had a chance to see it.
-      setDismissedResult(true);
-      // Deliberately NOT reset back to false here (Anatole, 2026-09-15): this fires in the same
-      // tick as reviewingLastHand above, which starts FriendsTableView's own 0.2s exit fade —
-      // flipping this back to false at that exact instant faded the hidden dealer cards in
-      // (this flag gates their opacity, see friends-table-view.tsx) at the same time as the
-      // whole table view was fading out, reading as cards flashing in and back out again. Left
-      // true here; reset instead once the next hand actually starts dealing (see the
-      // `!myHandResult` branch above), well after this screen has already left the table view.
-      // Lets the bet bar tell "everyone's back" from "just me" (see allSeatsAcknowledged
-      // below) instead of looking ready to bet the instant I alone dismiss. Fired a further
-      // beat after the screen swap itself starts (Anatole, 2026-09-15: the swap still read as a
-      // little stuttery) rather than in the same tick as reviewingLastHand above — its own
-      // onSuccess invalidates this table's query, and that refetch landing (and re-rendering the
-      // freshly-mounted bet screen with new data) mid-crossfade was competing with the swap's own
-      // animation frames for main-thread time. Purely a background heartbeat (see this mutation's
-      // own comment on being silent-on-failure/non-urgent), so delaying it past the crossfade's
-      // own ~0.32s costs nothing.
-      setTimeout(() => acknowledgeMutation.mutate(), 350);
-    }, 200);
+      // Deliberately NOT reset back to false here (Anatole, 2026-09-15): reset instead once the
+      // next hand actually starts dealing (see the `!myHandResult` branch above), well after this
+      // screen has already left the table view — see that branch's own comment for why resetting
+      // it any earlier faded the hidden dealer cards back into view mid-crossfade.
+      // Lets the bet bar tell "everyone's back" from "just me" (see allSeatsAcknowledged below)
+      // instead of looking ready to bet the instant I alone dismiss. Its own onSuccess invalidates
+      // this table's query, and that refetch landing (and re-rendering the freshly-mounted bet
+      // screen with new data) mid-crossfade would compete with the swap's own animation frames for
+      // main-thread time — delayed here past the crossfade's own ~320ms so it doesn't.
+      acknowledgeMutation.mutate();
+    }, 350);
   };
 
   // Auto-advances the result away on its own, same as House (Anatole, 2026-09-14: "pas besoin de
