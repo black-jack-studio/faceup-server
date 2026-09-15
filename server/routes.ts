@@ -1747,18 +1747,36 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       const playerHand: PlayerHand = { cards: playerCards, bet: betAmount, doubled: false, status: "active", result: null, payout: null };
-      const activeGame = await storage.createActiveGame({
-        userId,
-        mode,
-        status: "in_progress",
-        betAmount,
-        deck,
-        deckSeed,
-        deckHash,
-        playerHands: [playerHand],
-        dealerHand: dealerCards,
-        activeHandIndex: 0,
-      });
+      let activeGame;
+      try {
+        activeGame = await storage.createActiveGame({
+          userId,
+          mode,
+          status: "in_progress",
+          betAmount,
+          deck,
+          deckSeed,
+          deckHash,
+          playerHands: [playerHand],
+          dealerHand: dealerCards,
+          activeHandIndex: 0,
+        });
+      } catch (error: any) {
+        // Postgres unique_violation on active_games_one_in_progress_per_user (see
+        // migrations_manual/2026-09-15_active_games_one_per_user.sql) — a concurrent
+        // /api/game/start for this same user (double-tap, network retry) already won the race
+        // and created the in-progress row first. This request's bet was debited above but will
+        // never be played, so refund it instead of leaving it lost against a game that will
+        // never exist (2026-09-15 economy audit).
+        if (error?.code === "23505") {
+          await db
+            .update(users)
+            .set({ coins: sql`${users.coins} + ${betAmount}`, updatedAt: new Date() })
+            .where(eq(users.id, userId));
+          return res.status(409).json({ message: "A game is already in progress" });
+        }
+        throw error;
+      }
 
       // Drives whether Swap lights up (see handStrength.ts). Computed against this exact
       // remaining deck (already down 4 cards from the pop()s above) so it's ready in the very
