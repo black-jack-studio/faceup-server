@@ -1,6 +1,6 @@
 ﻿import type { Express } from "express";
 import { storage, getParisDateKey, getNextParisMidnight, DOUBLE_REWARD_AD_DAILY_LIMIT, isUserPremium } from "./storage";
-import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts, activeGames, submitReferralCodeSchema } from "@shared/schema";
+import { insertUserSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts, activeGames, submitReferralCodeSchema } from "@shared/schema";
 import { ServerBlackjackEngine, type Card } from "./BlackjackEngine";
 import { simulateWinProbability } from "./handStrength";
 import type { PlayerHand, GameAction, BlackjackMode } from "@shared/blackjack-types";
@@ -953,10 +953,47 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Fields the client is allowed to write through this generic profile PATCH. Deliberately
+  // excludes every economy/progression column (coins, gems, xp, level, membershipType,
+  // ownedAvatars, ...) -- those are only ever mutated by their own dedicated, server-validated
+  // routes (game settlement, /api/shop/gem-purchase, /api/iap/confirm-purchase, chests, avatar
+  // purchase, etc). A prior version of this route wrote req.body straight through, which let
+  // any authenticated user mint unlimited coins/gems/XP via a direct API call -- see the
+  // 2026-09-15 economy audit. selectedCardBackId is likewise excluded since it already has its
+  // own ownership-checked route (PATCH /api/user/selected-card-back); client callers that hit
+  // this route with it afterward are just syncing local state and don't need the write to land.
+  const PROFILE_FIELDS_CLIENT_MAY_SET = new Set([
+    "hasCompletedOnboarding",
+    "hasSeenTrackingPrompt",
+    "hasSeenRatingPrompt",
+    "pushPromptRankIndex",
+    "selectedAvatarId",
+  ]);
+
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
     try {
-      const updates = req.body;
-      const updatedUser = await storage.updateUser((req.session as any).userId, updates);
+      const userId = (req.session as any).userId;
+      const updates: Record<string, unknown> = {};
+      PROFILE_FIELDS_CLIENT_MAY_SET.forEach((field) => {
+        if (field in req.body) updates[field] = req.body[field];
+      });
+
+      if (typeof updates.selectedAvatarId === "string") {
+        // Ownership check mirrors PATCH /api/user/selected-card-back: an avatar id is either
+        // free (people category) or must already be in ownedAvatars. Tone avatars are keyed by
+        // their baseId (before "::tone"), same as /api/avatars/purchase.
+        const purchaseId = updates.selectedAvatarId.split("::")[0];
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        const owned = Array.isArray(user.ownedAvatars) ? (user.ownedAvatars as string[]) : [];
+        if (avatarCostFor(purchaseId) > 0 && !owned.includes(purchaseId)) {
+          return res.status(403).json({ message: "Avatar not owned" });
+        }
+      }
+
+      const updatedUser = await storage.updateUser(userId, updates);
 
       const { password: _, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
@@ -981,22 +1018,6 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  app.post("/api/user/coins/update", requireAuth, async (req, res) => {
-    try {
-      const { amount } = req.body;
-
-      if (typeof amount !== "number") {
-        return res.status(400).json({ message: "Amount must be a number" });
-      }
-
-      const updatedUser = await storage.updateUserCoins((req.session as any).userId, amount);
-      res.json({ coins: updatedUser.coins });
-    } catch (error: any) {
-      console.error("Error updating coins:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
   // Gems endpoints
   app.get("/api/user/gems", requireAuth, async (req, res) => {
     try {
@@ -1007,46 +1028,6 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       res.json({ gems: user.gems || 0 });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/user/gems/add", requireAuth, async (req, res) => {
-    try {
-      const { amount, description, relatedId } = req.body;
-
-      if (typeof amount !== "number" || amount <= 0) {
-        return res.status(400).json({ message: "Amount must be a positive number" });
-      }
-
-      if (!description) {
-        return res.status(400).json({ message: "Description is required" });
-      }
-
-      const updatedUser = await storage.addGemsToUser((req.session as any).userId, amount, description, relatedId);
-      res.json({ gems: updatedUser.gems });
-    } catch (error: any) {
-      console.error("Error adding gems:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/user/gems/spend", requireAuth, async (req, res) => {
-    try {
-      const { amount, description, relatedId } = req.body;
-
-      if (typeof amount !== "number" || amount <= 0) {
-        return res.status(400).json({ message: "Amount must be a positive number" });
-      }
-
-      if (!description) {
-        return res.status(400).json({ message: "Description is required" });
-      }
-
-      const updatedUser = await storage.spendGemsFromUser((req.session as any).userId, amount, description, relatedId);
-      res.json({ gems: updatedUser.gems });
-    } catch (error: any) {
-      console.error("Error spending gems:", error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -2273,55 +2254,14 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   // Game stats routes
-  app.post("/api/stats", requireAuth, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const statsData = insertGameStatsSchema.parse({
-        ...req.body,
-        userId,
-      });
-
-      const stats = await storage.createGameStats(statsData);
-
-      // Same season-scoped rank counter as the server-authoritative game route — keeps
-      // parity since gameStats.handsWon (which already includes these hands) is what
-      // ranks were based on before the season split.
-      await storage.addSeasonHandsWon(userId, statsData.handsWon || 0);
-
-      // Mettre à jour la progression des challenges automatiquement
-      const gameResult = {
-        handsPlayed: statsData.handsPlayed || 0,
-        handsWon: statsData.handsWon || 0,
-        blackjacks: statsData.blackjacks || 0,
-        coinsWon: (statsData.totalWinnings || 0) - (statsData.totalLosses || 0) // Gain net
-      };
-
-      const completedChallenges = await ChallengeService.updateChallengeProgress(userId, gameResult);
-
-      // Système d'XP : +5 XP par victoire, +7 XP bonus par blackjack naturel (en plus du
-      // gain de victoire normal)
-      let xpResult;
-      const xpPerWin = 5;
-      const blackjackXpBonus = 7;
-      const xpGained = ((statsData.handsWon || 0) * xpPerWin) + ((statsData.blackjacks || 0) * blackjackXpBonus);
-      if (xpGained > 0) {
-        xpResult = await storage.addXPToUser(userId, xpGained);
-      }
-
-      res.json({
-        stats,
-        completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined,
-        xpGained,
-        levelUp: xpResult?.leveledUp ? {
-          newLevel: xpResult.user.level,
-          rewards: xpResult.rewards
-        } : undefined,
-      });
-    } catch (error: any) {
-      console.error("Error creating game stats:", error);
-      res.status(400).json({ message: error.message });
-    }
-  });
+  //
+  // POST /api/stats was removed (2026-09-15 economy audit): it accepted handsWon/blackjacks/
+  // totalWinnings straight from the client and used them to grant season rank progress,
+  // challenge completions, and XP, with nothing tying the payload to a real server-settled game.
+  // A direct call could fabricate an arbitrary win count and skip straight to top ranks/rewards.
+  // Unused by the client — the real path is recordGameSettlement (called from /api/game/action,
+  // /api/game/start, /api/game/forfeit and their Play-with-Friends equivalents), which derives
+  // the same handsWon/blackjacks/XP from hands actually settled server-side.
 
   app.get("/api/stats/summary", requireAuth, async (req, res) => {
     try {
@@ -2979,42 +2919,11 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  app.post("/api/shop/purchase", requireAuth, async (req, res) => {
-    try {
-      const { itemType, itemId, currency, price } = req.body;
-
-      const user = await storage.getUser((req.session as any).userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Check if user can afford
-      if (!EconomyManager.canAfford(user.coins || 0, user.gems || 0, price, currency)) {
-        return res.status(400).json({ message: "Insufficient funds" });
-      }
-
-      // Deduct currency
-      const updates: any = {};
-      if (currency === 'coins') {
-        updates.coins = (user.coins || 0) - price;
-      } else {
-        updates.gems = (user.gems || 0) - price;
-      }
-
-      await storage.updateUser((req.session as any).userId, updates);
-
-      // Add item to inventory
-      await storage.createInventory({
-        userId: (req.session as any).userId,
-        itemType,
-        itemId,
-      });
-
-      res.json({ success: true });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
+  // /api/shop/purchase was removed (2026-09-15 economy audit): it trusted a client-supplied
+  // `price` instead of pricing the item server-side, so a direct call with price:0 (or negative)
+  // unlocked inventory items for free or credited currency. Unused by the client -- real
+  // purchases go through /api/shop/gem-purchase and /api/avatars/purchase, which both derive
+  // cost from the server-side catalog.
 
   // Inventory routes
   app.get("/api/inventory", requireAuth, async (req, res) => {
