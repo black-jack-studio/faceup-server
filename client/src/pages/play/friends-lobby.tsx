@@ -498,9 +498,10 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       // instead of looking ready to bet the instant I alone dismiss. Its own onSuccess invalidates
       // this table's query, and that refetch landing (and re-rendering the freshly-mounted bet
       // screen with new data) mid-crossfade would compete with the swap's own animation frames for
-      // main-thread time — delayed here past the crossfade's own ~320ms so it doesn't.
+      // main-thread time — delayed here past the crossfade's own duration (bumped alongside it,
+      // 350ms -> 550ms, when that duration went from ~320ms to 500ms) so it doesn't.
       acknowledgeMutation.mutate();
-    }, 350);
+    }, 550);
   };
 
   // Auto-advances the result away on its own, same as House (Anatole, 2026-09-14: "pas besoin de
@@ -668,14 +669,18 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
           // mode="wait" was originally chosen to avoid. Exit now shares the enter's own duration/
           // easing (previously a quicker, sharper ease-out fitted for finishing before the enter
           // began) so the crossfade reads as one symmetric motion instead of two mismatched ones.
+          // Duration bumped from 0.32s to 0.5s and the y travel eased down from 12px to 6px
+          // (Anatole, 2026-09-15: "trop rapide, pas assez fondu" — wanted this handoff read as a
+          // slower dissolve, not mostly a slide) — matches FriendsTableView's own isDismissingResult
+          // fade (also 500ms as of this change) so neither half of the crossfade outruns the other.
           <AnimatePresence mode="popLayout" initial={false}>
             {showTableView ? (
               <motion.div
                 key="table"
                 className="flex-1 w-full min-h-0 flex flex-col"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
-                exit={{ opacity: 0, y: -12, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}
+                exit={{ opacity: 0, y: -6, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}
               >
                 <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} showResult={showResult} resultType={resultOverlay?.type ?? null} netResultAmount={resultOverlay?.netResultAmount ?? 0} onDismissResult={handleDismissResult} friendsStreak={friendsStreak} streakCelebrationBonus={streakCelebrationBonus} hideResultBanner={hideResultBanner} showStreakInResultSlot={showStreakInResultSlot} isDismissingResult={isDismissingResult} />
               </motion.div>
@@ -683,9 +688,9 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
               <motion.div
                 key="bet"
                 className="flex-1 flex flex-col items-center min-h-0 pt-2 gap-6"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
-                exit={{ opacity: 0, y: -12, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}
+                exit={{ opacity: 0, y: -6, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}
               >
                 {/* The "triangle" — both side seats plus my own avatar — as a group in whatever
                     space is left above the bet bar, instead of spread across the whole screen (with
