@@ -60,8 +60,12 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
     actionError,
   } = useGameStore();
 
+  // Two targeted selectors rather than one whole-store destructure for loadUserCoins -- the
+  // latter re-subscribes to every field (coins, gems, xp, streak, ...), forcing a re-render
+  // here on any of them changing anywhere in the app, not just user/loadUserCoins actually
+  // changing.
   const user = useUserStore((state) => state.user);
-  const { loadUserCoins } = useUserStore();
+  const loadUserCoins = useUserStore((state) => state.loadUserCoins);
   const [showOptimalMove, setShowOptimalMove] = useState(false);
   const [, setLastDecision] = useState<string | null>(null);
   const [, setIsCorrect] = useState<boolean | null>(null);

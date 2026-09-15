@@ -139,8 +139,14 @@ export default function Shop() {
   const { t } = useTranslation("shop");
   const [location, navigate] = useLocation();
   const search = useSearch();
+  // Three targeted selectors rather than one whole-store destructure for updateUser/loadUser --
+  // the latter re-subscribes to every field (coins, gems, xp, streak, ...), and since Shop stays
+  // permanently mounted behind Home/Profile (see TabCarousel in App.tsx), that meant this whole
+  // 1000+ line, animation-heavy page fully re-rendered on every coin/XP/streak change from
+  // anywhere in the app -- including mid-game, screens away -- not just while Shop was visible.
   const user = useUserStore((state) => state.user);
-  const { updateUser, loadUser } = useUserStore();
+  const updateUser = useUserStore((state) => state.updateUser);
+  const loadUser = useUserStore((state) => state.loadUser);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

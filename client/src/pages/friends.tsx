@@ -32,8 +32,12 @@ export default function Friends({ onClose }: FriendsProps) {
   const [isAddReferralCodeModalOpen, setIsAddReferralCodeModalOpen] = useState(false);
   const [referralCodeInput, setReferralCodeInput] = useState("");
   const [copied, setCopied] = useState(false);
+  // Two targeted selectors rather than one whole-store destructure for updateUser -- the
+  // latter re-subscribes to every field (coins, gems, xp, streak, ...), forcing a re-render
+  // here on any of them changing anywhere in the app, not just user/updateUser actually
+  // changing.
   const user = useUserStore((state) => state.user);
-  const { updateUser } = useUserStore();
+  const updateUser = useUserStore((state) => state.updateUser);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

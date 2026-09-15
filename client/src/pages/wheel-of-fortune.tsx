@@ -33,7 +33,11 @@ export default function WheelOfFortunePage() {
   const [reward, setReward] = useState<WheelReward | null>(null);
   const [showReward, setShowReward] = useState(false);
   const [isWatchingAd, setIsWatchingAd] = useState(false);
-  const { user, updateUser } = useUserStore();
+  // Two targeted selectors rather than one whole-store destructure -- the latter re-subscribes
+  // to every field (coins, gems, xp, streak, ...), forcing a re-render here on any of them
+  // changing anywhere in the app, not just user/updateUser actually changing.
+  const user = useUserStore((state) => state.user);
+  const updateUser = useUserStore((state) => state.updateUser);
   // Runs once the slowest (last) reel's animation actually settles, instead of a hardcoded
   // setTimeout that has to guess the animation's duration.
   const onSpinSettledRef = useRef<(() => void) | null>(null);

@@ -23,7 +23,11 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
   const [newUsername, setNewUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const { user, updateUser } = useUserStore();
+  // Two targeted selectors rather than one whole-store destructure -- the latter re-subscribes
+  // to every field (coins, gems, xp, streak, ...), forcing a re-render here on any of them
+  // changing anywhere in the app, not just user/updateUser actually changing.
+  const user = useUserStore((state) => state.user);
+  const updateUser = useUserStore((state) => state.updateUser);
 
   // Reference-counted (see the hook): a plain reset-to-"" on close used to clobber an outer
   // sheet's lock too when this was opened nested inside one (it's reached from Settings).
