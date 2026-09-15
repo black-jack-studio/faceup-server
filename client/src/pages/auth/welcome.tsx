@@ -27,13 +27,13 @@ const SLIDES = [
 
 const SLIDE_DURATION_MS = 3000;
 
-// Same on-screen height the old Figma phone mockup used to reserve (its frame was
-// MOCK_WIDTH=172 wide at that FRAME.h/FRAME.w aspect ratio). Width is computed explicitly
-// from the new renders' own 1024x1536 aspect ratio rather than left as CSS `width: auto` on
-// an absolutely-positioned <img> — that depends on the replaced-element auto-sizing-from-
-// intrinsic-ratio algorithm, which iOS's WKWebView (the app's real runtime) doesn't reliably
-// apply, and silently collapsed the image to zero width there.
-const MOCK_HEIGHT = 172 * (2642 / 1280);
+// Height driven off a reference width (230, up from the old Figma frame's 172 — Anatole,
+// 2026-09-15: "trop petits", bumped ~34%), at that same 2642/1280 ratio. MOCK_WIDTH is then
+// computed explicitly from the new renders' own 1024x1536 aspect ratio rather than left as
+// CSS `width: auto` on an absolutely-positioned <img> — that depends on the replaced-element
+// auto-sizing-from-intrinsic-ratio algorithm, which iOS's WKWebView (the app's real runtime)
+// doesn't reliably apply, and silently collapsed the image to zero width there.
+const MOCK_HEIGHT = 230 * (2642 / 1280);
 const MOCK_WIDTH = MOCK_HEIGHT * (1024 / 1536);
 
 export default function Welcome() {
