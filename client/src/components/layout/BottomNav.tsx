@@ -120,7 +120,6 @@ export default function BottomNav({ hidden = false, dimmed = false }: { hidden?:
   };
 
   const handleNavigate = (path: string) => {
-    triggerHapticTick();
     navigate(path);
   };
 
@@ -163,6 +162,12 @@ export default function BottomNav({ hidden = false, dimmed = false }: { hidden?:
             return (
               <motion.button
                 key={path}
+                // Haptic fires on the tap's very first contact, not on the completed click
+                // (which only fires once the finger lifts) -- this bar isn't inside a
+                // scrollable ancestor, so there's no risk of firing it on a scroll gesture
+                // that merely starts here. The actual navigation stays on onClick below so a
+                // swipe/drag away before lifting still cancels it, same as before.
+                onPointerDown={() => triggerHapticTick()}
                 onClick={() => handleNavigate(path)}
                 whileTap={{ scale: 0.85 }}
                 className={`flex flex-col items-center space-y-1 p-1.5 rounded-xl transition-transform duration-200 ${

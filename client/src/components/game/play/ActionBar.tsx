@@ -71,10 +71,14 @@ function ActionButton({
 
   return (
     <motion.button
-      onClick={() => {
-        triggerHapticTick();
-        onClick?.();
+      // Haptic fires on first contact, not on the completed click (which only fires once the
+      // finger lifts) -- this row isn't inside a scrollable ancestor, so there's no risk of
+      // firing it on a scroll gesture that merely starts here. The actual action stays on
+      // onClick below so a swipe/drag away before lifting still cancels it, same as before.
+      onPointerDown={() => {
+        if (!disabled) triggerHapticTick();
       }}
+      onClick={onClick}
       disabled={disabled}
       // Same two-layer shell (outer shape/padding, inner visible pill) as the Swap button
       // below — a plain single-layer button here used to render very slightly shorter than

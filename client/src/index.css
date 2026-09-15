@@ -141,6 +141,12 @@ input:-webkit-autofill:active {
        tapped (most visible on bg-black elements like the profile stat cards) — every
        tappable element in the app already has its own hover/active feedback. */
     -webkit-tap-highlight-color: transparent;
+    /* Belt-and-suspenders against the legacy ~300ms tap delay some engines add while waiting
+       to see if a tap is the start of a double-tap-to-zoom gesture. The viewport's own
+       maximum-scale=1 (index.html) already disables that wait on modern WebKit/Chromium, so
+       this shouldn't change anything measurable today -- it's here in case an older WebView
+       build doesn't honor that. */
+    touch-action: manipulation;
     /* Native Lock: this is a game UI, not a document, so nothing should behave like a web
        page by default -- no text selection handles on a long press, no iOS
        copy/share/save-image callout menu. Inputs/textareas/contenteditable opt back into
