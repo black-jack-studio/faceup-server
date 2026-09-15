@@ -39,8 +39,10 @@ import { triggerHapticImpact } from "@/lib/haptics";
 const ROOM = { name: "House", minBet: 1, maxBet: 500 };
 
 // How long a press on the BET button has to hold before it's read as "turn on auto mode"
-// rather than a normal tap — see handleBetPressStart/handleBetPressEnd.
-const AUTO_MODE_HOLD_MS = 500;
+// rather than a normal tap — see handleBetPressStart/handleBetPressEnd. Long enough (2s) that
+// the button's own shake (see isHoldingBet) has room to actually read as a charge-up rather
+// than a flicker.
+const AUTO_MODE_HOLD_MS = 2000;
 
 // EXPERIMENTAL (Anatole, 2026-09-12) — test change: the result's auto-advance/streak-handoff
 // below now runs the same way in manual play as in auto-bet (2026-09-12, second pass — it
@@ -391,17 +393,24 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // so the click that follows the eventual pointerup doesn't fire a second one.
   const betPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const betPressFiredRef = useRef(false);
+  // Drives the button's own shake (see its motion.button below) for exactly the span of the
+  // hold — released early (tap) or cut short by the timer firing, either way this is what
+  // stops it.
+  const [isHoldingBet, setIsHoldingBet] = useState(false);
   const handleBetPressStart = () => {
     if (isPlacingBet || balance < currentBet) return;
     betPressFiredRef.current = false;
+    setIsHoldingBet(true);
     betPressTimerRef.current = setTimeout(() => {
       betPressFiredRef.current = true;
+      setIsHoldingBet(false);
       triggerHapticImpact();
       setAutoBetEnabled(true);
       handlePlaceBet();
     }, AUTO_MODE_HOLD_MS);
   };
   const handleBetPressEnd = () => {
+    setIsHoldingBet(false);
     if (betPressTimerRef.current) {
       clearTimeout(betPressTimerRef.current);
       betPressTimerRef.current = null;
@@ -1294,6 +1303,13 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                         onContextMenu={(e) => e.preventDefault()}
                         disabled={isPlacingBet || balance < currentBet}
                         whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.96 } : {}}
+                        // The "charging up" shake for the AUTO_MODE_HOLD_MS hold — independent
+                        // of whileTap's scale above (framer animates x and scale separately),
+                        // so the squish-on-press and the shake both play at once. Snaps back to
+                        // still (x: 0) the instant isHoldingBet drops, whether that's an early
+                        // release or the hold's own timer firing.
+                        animate={isHoldingBet ? { x: [0, -2, 2, -2, 2, 0] } : { x: 0 }}
+                        transition={isHoldingBet ? { duration: 0.25, repeat: Infinity, ease: "easeInOut" } : { duration: 0.1 }}
                         className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed select-none touch-manipulation"
                         data-testid="button-place-bet"
                       >
