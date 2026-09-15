@@ -14,10 +14,11 @@ import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 import homeShot from "@assets/onboarding_home_1.png";
 import profileShot from "@assets/onboarding_profile_1.png";
 import gameShot from "@assets/onboarding_game_1.png";
-import mockupFrame from "@assets/mockup_bezel_only.png";
 
 // One slide per real in-app screenshot — swiped automatically, same spirit as a native
-// App Store onboarding carousel (device frame + one punchy line per slide).
+// App Store onboarding carousel (one punchy line per slide). These are already full device
+// mockup renders (bezel baked into the image itself, transparent background) — shown as-is,
+// no frame overlay of our own on top (Anatole, 2026-09-15: "pas de cadre blanc").
 const SLIDES = [
   { image: homeShot, headlineKey: "slide1" },
   { image: profileShot, headlineKey: "slide2" },
@@ -26,11 +27,10 @@ const SLIDES = [
 
 const SLIDE_DURATION_MS = 3000;
 
-// Exact geometry of the phone mockup PNG (exported from the Figma iPhone 17 Pro
-// mockup), so the crossfading screenshots land precisely inside its screen cutout.
-const MOCK_WIDTH = 172;
-const FRAME = { w: 1280, h: 2642, screenX: 55, screenY: 55, screenW: 1170, screenH: 2532, screenRadius: 165 };
-const MOCK_SCALE = MOCK_WIDTH / FRAME.w;
+// Same on-screen footprint the old Figma phone mockup used to reserve (its frame was
+// MOCK_WIDTH=172 wide at this same FRAME.h/FRAME.w aspect ratio) — height fixed, width auto
+// from each slide's own aspect ratio so nothing stretches.
+const MOCK_HEIGHT = 172 * (2642 / 1280);
 
 export default function Welcome() {
   const { t } = useTranslation("welcome");
@@ -77,13 +77,10 @@ export default function Welcome() {
         paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
       }}
     >
-      {/* Phone mockup - the real iPhone 17 Pro frame exported from Figma, with real
-          in-app screenshots crossfading in the transparent screen cutout beneath it. */}
+      {/* Real in-app screenshots (already full device mockup renders) crossfading in place —
+          no frame of our own drawn on top. */}
       <div className="flex justify-center px-6">
-        <div
-          className="relative shadow-[0_30px_60px_-15px_rgba(0,0,0,0.85)]"
-          style={{ width: MOCK_WIDTH, aspectRatio: `${FRAME.w} / ${FRAME.h}` }}
-        >
+        <div className="relative" style={{ height: MOCK_HEIGHT }}>
           {/* Plain CSS opacity crossfade - a JS-driven (framer-motion) tween can get stuck
               mid-fade if the tab isn't actively focused/painting every frame; a CSS
               transition is driven by the compositor instead and doesn't have that problem. */}
@@ -92,25 +89,13 @@ export default function Welcome() {
               key={s.image}
               src={s.image}
               alt=""
-              className="absolute object-cover"
+              className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-auto object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.85)]"
               style={{
-                left: FRAME.screenX * MOCK_SCALE,
-                top: FRAME.screenY * MOCK_SCALE,
-                width: FRAME.screenW * MOCK_SCALE,
-                height: FRAME.screenH * MOCK_SCALE,
-                borderRadius: FRAME.screenRadius * MOCK_SCALE,
                 opacity: i === slide ? 1 : 0,
                 transition: "opacity 0.5s ease",
               }}
             />
           ))}
-
-          {/* Frame + camera cutout on top, screen area fully transparent */}
-          <img
-            src={mockupFrame}
-            alt=""
-            className="absolute inset-0 w-full h-full pointer-events-none select-none"
-          />
         </div>
       </div>
 
