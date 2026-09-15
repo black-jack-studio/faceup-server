@@ -1017,9 +1017,13 @@ export default function FriendsTableView({
                 (see hideResultBanner/showStreakInResultSlot timing, owned by friends-lobby.tsx)
                 — this table's own independent win streak (see currentStreakFriends in
                 schema.ts), same 3-win-cycle bar/flame/celebration as House's WinStreakBar, just
-                not sharing House's own counter/leaderboard. */}
+                not sharing House's own counter/leaderboard. relative z-30 matches
+                RoundResultBanner's own stacking above (same z-30, see its comment) — without it
+                this bar sat below ResultDimOverlay's z-26 dim, so it visibly darkened the instant
+                it took over from the banner instead of staying at full brightness like the banner
+                itself (Anatole, 2026-09-15). */}
             {showStreakInResultSlot && (friendsStreak > 0 || streakCelebrationBonus != null) && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
+              <motion.div className="relative z-30" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
                 <WinStreakBar streak={friendsStreak} celebrationBonus={streakCelebrationBonus} />
               </motion.div>
             )}
