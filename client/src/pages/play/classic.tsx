@@ -39,10 +39,14 @@ import { triggerHapticImpact } from "@/lib/haptics";
 const ROOM = { name: "House", minBet: 1, maxBet: 500 };
 
 // How long a press on the BET button has to hold before it's read as "turn on auto mode"
-// rather than a normal tap — see handleBetPressStart/handleBetPressEnd. Long enough (2s) that
-// the button's own shake (see isHoldingBet) has room to actually read as a charge-up rather
-// than a flicker.
-const AUTO_MODE_HOLD_MS = 2000;
+// rather than a normal tap — see handleBetPressStart/handleBetPressEnd.
+const AUTO_MODE_HOLD_MS = 1000;
+
+// The BET button's hold shake (see isHoldingBet's own motion.button) plays through this whole
+// sequence exactly once, timed to AUTO_MODE_HOLD_MS — the growing pairs are what make it read
+// as barely-there at the start of the hold and a real vibration by the time auto mode fires,
+// rather than one fixed-intensity wobble the whole way through.
+const SHAKE_X_KEYFRAMES = [0, -1, 1, -1, 1, -2, 2, -2, 2, -3, 3, -3, 3, -4, 4, -4, 4, -5, 5, -5, 5, 0];
 
 // EXPERIMENTAL (Anatole, 2026-09-12) — test change: the result's auto-advance/streak-handoff
 // below now runs the same way in manual play as in auto-bet (2026-09-12, second pass — it
@@ -1305,11 +1309,14 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                         whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.96 } : {}}
                         // The "charging up" shake for the AUTO_MODE_HOLD_MS hold — independent
                         // of whileTap's scale above (framer animates x and scale separately),
-                        // so the squish-on-press and the shake both play at once. Snaps back to
-                        // still (x: 0) the instant isHoldingBet drops, whether that's an early
-                        // release or the hold's own timer firing.
-                        animate={isHoldingBet ? { x: [0, -2, 2, -2, 2, 0] } : { x: 0 }}
-                        transition={isHoldingBet ? { duration: 0.25, repeat: Infinity, ease: "easeInOut" } : { duration: 0.1 }}
+                        // so the squish-on-press and the shake both play at once. SHAKE_X_KEYFRAMES
+                        // plays through once, stretched to exactly fill the hold (duration
+                        // matches AUTO_MODE_HOLD_MS) so its built-in amplitude ramp lands right
+                        // as auto mode actually fires. Snaps back to still (x: 0) the instant
+                        // isHoldingBet drops, whether that's an early release (interrupting the
+                        // ramp partway through) or the hold's own timer firing.
+                        animate={isHoldingBet ? { x: SHAKE_X_KEYFRAMES } : { x: 0 }}
+                        transition={isHoldingBet ? { duration: AUTO_MODE_HOLD_MS / 1000, ease: "linear" } : { duration: 0.1 }}
                         className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed select-none touch-manipulation"
                         data-testid="button-place-bet"
                       >
