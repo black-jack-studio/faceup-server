@@ -396,9 +396,11 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       // Mirrors friends-table-view's own dealer reveal timing: the hole card starts flipping
       // at 1.4s and takes 0.5s to settle (1.9s total — see card.tsx's tween duration), then
       // every hit card beyond it only mounts once the one before it has actually settled, each
-      // adding its own 0.3s (default revealDelay) + 0.5s (flip duration) — plus a little
-      // breathing room before the sheet slides up over it.
-      const dealerRevealMs = (1.9 + Math.max(0, dealerCards.length - 2) * 0.8 + 0.3) * 1000;
+      // adding its own 0.3s (default revealDelay) + 0.5s (flip duration) — plus breathing room
+      // before the sheet slides up over it. That breathing room was 0.3s but read as the result
+      // banner (win/lose/push/blackjack) popping up right on the last card's flip instead of
+      // after it (Anatole, 2026-09-15) — bumped to 0.9s.
+      const dealerRevealMs = (1.9 + Math.max(0, dealerCards.length - 2) * 0.8 + 0.9) * 1000;
       const timer = setTimeout(() => {
         const type: Exclude<GameResultType, null> =
           hand.result === "lose" ? "loss" : hand.result === "push" ? "tie" : hand.result === "blackjack" ? "blackjack" : "win";
@@ -426,6 +428,10 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
     if (!myHandResult) {
       resultShownRef.current = false;
       setDismissedResult(false);
+      // Mirrors resultShownRef's own reset: a fresh hand with no result yet is exactly the
+      // moment this needs clearing back to false so its dealt cards render (see the guard's own
+      // comment on why handleDismissResult itself deliberately leaves this at true instead).
+      setIsDismissingResult(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myHandResult]);
@@ -481,7 +487,13 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       // forces the table to move on before someone else still reviewing their own result has
       // had a chance to see it.
       setDismissedResult(true);
-      setIsDismissingResult(false);
+      // Deliberately NOT reset back to false here (Anatole, 2026-09-15): this fires in the same
+      // tick as reviewingLastHand above, which starts FriendsTableView's own 0.2s exit fade —
+      // flipping this back to false at that exact instant faded the hidden dealer cards in
+      // (this flag gates their opacity, see friends-table-view.tsx) at the same time as the
+      // whole table view was fading out, reading as cards flashing in and back out again. Left
+      // true here; reset instead once the next hand actually starts dealing (see the
+      // `!myHandResult` branch above), well after this screen has already left the table view.
       // Lets the bet bar tell "everyone's back" from "just me" (see allSeatsAcknowledged
       // below) instead of looking ready to bet the instant I alone dismiss.
       acknowledgeMutation.mutate();
