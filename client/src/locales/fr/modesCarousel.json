@@ -1,5 +1,9 @@
 {
   "classic": { "title": "House", "subtitle": "Mises de 1 à 500" },
   "friends": { "title": "Jouer entre amis", "subtitle": "Jusqu'à 3 joueurs à la table" },
-  "comingSoon": { "title": "Bientôt disponible", "subtitle": "Un nouveau mode arrive bientôt" }
+  "bar": { "title": "Bar", "subtitle": "Mises de 500 à 2 500" },
+  "club": { "title": "Club", "subtitle": "Mises de 2 500 à 10 000" },
+  "vegas": { "title": "Vegas", "subtitle": "Mises de 10 000 à 50 000" },
+  "penthouse": { "title": "Penthouse", "subtitle": "Mises de 50 000 à 250 000" },
+  "monaco": { "title": "Monaco", "subtitle": "Mises de 250 000 à 1 000 000" }
 }

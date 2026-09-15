@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next";
 import { GameMode } from "@/store/game-store";
 
 interface ModeCardProps {
-  // "coming-soon" covers the generic, non-clickable placeholder tile in the modes carousel,
-  // which isn't backed by a real GameMode.
-  mode: GameMode | "coming-soon";
+  // Only used for this card's key/data-testid — not narrowed to GameMode since the carousel
+  // also renders stakes-tier placeholder tiles (Bar, Club, Vegas, Penthouse, Monaco) that
+  // aren't backed by a real GameMode yet (see canPlay).
+  mode: GameMode | string;
   title: string;
   subtitle: string;
   icon: React.ComponentType<{ className?: string }> | string;

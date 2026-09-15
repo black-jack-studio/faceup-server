@@ -1,5 +1,9 @@
 {
   "classic": { "title": "House", "subtitle": "Bets from 1 to 500" },
   "friends": { "title": "Play with Friends", "subtitle": "Up to 3 players at the table" },
-  "comingSoon": { "title": "Coming Soon", "subtitle": "A new mode is on its way" }
+  "bar": { "title": "Bar", "subtitle": "Bets from 500 to 2,500" },
+  "club": { "title": "Club", "subtitle": "Bets from 2,500 to 10,000" },
+  "vegas": { "title": "Vegas", "subtitle": "Bets from 10,000 to 50,000" },
+  "penthouse": { "title": "Penthouse", "subtitle": "Bets from 50,000 to 250,000" },
+  "monaco": { "title": "Monaco", "subtitle": "Bets from 250,000 to 1,000,000" }
 }

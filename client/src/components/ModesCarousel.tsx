@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { useGameStore } from "@/store/game-store";
+import { useGameStore, type GameMode } from "@/store/game-store";
 import ModeCard from "./ModeCard";
 import houseImage from '@assets/house_3d.png';
 import calendarImage from '@assets/calendar_3d_1787179981404.png';
@@ -10,6 +10,13 @@ import bicepsImage from '@assets/flexed_biceps_3d_default.png';
 // title/subtitle are i18next keys (looked up against the "modesCarousel" namespace when
 // rendered below), not literal display text — this array lives outside the component so it
 // can't call useTranslation() itself.
+//
+// Bar/Club/Vegas/Penthouse/Monaco are the higher stakes tiers above House (Classic 21's own
+// entry-level table, minBet 1 - maxBet 500, see classic.tsx's ROOM) agreed with Anatole
+// 2026-09-15 — each one's own minBet is the previous tier's maxBet, climbing 500 -> 2,500 ->
+// 10,000 -> 50,000 -> 250,000 -> 1,000,000. Visual-only for now (clickable: false, no ROOM
+// preset or route behind them yet, same inert treatment the old single "Coming Soon" tile had)
+// — replaces that generic tile now that there's a concrete lineup to preview instead.
 const modeData = [
   {
     mode: "classic" as const,
@@ -17,6 +24,7 @@ const modeData = [
     subtitleKey: "classic.subtitle",
     icon: houseImage,
     gradient: "bg-gradient-to-br from-green-200 via-blue-100 to-gray-100",
+    clickable: true,
   },
   {
     mode: "friends" as const,
@@ -24,13 +32,47 @@ const modeData = [
     subtitleKey: "friends.subtitle",
     icon: bicepsImage,
     gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
+    clickable: true,
   },
   {
-    mode: "coming-soon" as const,
-    titleKey: "comingSoon.title",
-    subtitleKey: "comingSoon.subtitle",
+    mode: "bar",
+    titleKey: "bar.title",
+    subtitleKey: "bar.subtitle",
     icon: calendarImage,
-    gradient: "bg-gradient-to-br from-blue-200 via-indigo-100 to-purple-100",
+    gradient: "bg-gradient-to-br from-amber-200 via-orange-100 to-yellow-50",
+    clickable: false,
+  },
+  {
+    mode: "club",
+    titleKey: "club.title",
+    subtitleKey: "club.subtitle",
+    icon: calendarImage,
+    gradient: "bg-gradient-to-br from-fuchsia-200 via-pink-100 to-purple-100",
+    clickable: false,
+  },
+  {
+    mode: "vegas",
+    titleKey: "vegas.title",
+    subtitleKey: "vegas.subtitle",
+    icon: calendarImage,
+    gradient: "bg-gradient-to-br from-red-200 via-orange-100 to-yellow-100",
+    clickable: false,
+  },
+  {
+    mode: "penthouse",
+    titleKey: "penthouse.title",
+    subtitleKey: "penthouse.subtitle",
+    icon: calendarImage,
+    gradient: "bg-gradient-to-br from-sky-200 via-cyan-100 to-slate-100",
+    clickable: false,
+  },
+  {
+    mode: "monaco",
+    titleKey: "monaco.title",
+    subtitleKey: "monaco.subtitle",
+    icon: calendarImage,
+    gradient: "bg-gradient-to-br from-amber-300 via-yellow-100 to-rose-100",
+    clickable: false,
   },
 ];
 
@@ -51,7 +93,7 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
   const { t } = useTranslation("modesCarousel");
   const [, navigate] = useLocation();
 
-  const handleModeSelect = (mode: Exclude<typeof modeData[0]["mode"], "coming-soon">) => {
+  const handleModeSelect = (mode: GameMode) => {
     // Set mode and navigate
     useGameStore.getState().setMode(mode);
     if (mode === "friends" && onSelectFriends) {
@@ -93,10 +135,12 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
               icon={mode.icon}
               gradient={mode.gradient}
               onClick={() => {
-                if (mode.mode === "coming-soon") return;
-                handleModeSelect(mode.mode);
+                if (!mode.clickable) return;
+                // Safe: clickable is only ever true for the classic/friends entries above —
+                // the stakes-tier placeholders are all clickable: false and never reach here.
+                handleModeSelect(mode.mode as GameMode);
               }}
-              canPlay={mode.mode !== "coming-soon"}
+              canPlay={mode.clickable}
               skipEntrance={skipEntrance}
             />
           </div>
